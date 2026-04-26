@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  install.sh — Dotfile manager  (Arch + Wayland + fish)
+#  install.sh — Dotfile manager  ( Niri + Wayland + fish)
 #
 #  Commands:  bootstrap · install · update · rollback · status
 #
