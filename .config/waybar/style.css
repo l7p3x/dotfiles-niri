@@ -1,0 +1,286 @@
+@define-color modules_background                rgba(40, 40, 40, 0.9);
+
+@define-color workspaces_button_off             #928374;
+@define-color workspaces_button_on              #fbf1c7;
+
+@define-color window                            #b8bb26;
+
+@define-color tray_menu                         #1d2021;
+@define-color tray_menu_border                  #3c3836;
+@define-color tray_menu_item                    #ebdbb2;
+@define-color tray_menu_item_hover              #ebdbb2;
+@define-color tray_menu_item_hover_background   #504945;
+
+@define-color clock_idle                        #ebdbb2;
+@define-color clock_hover                       #a89984;
+
+@define-color cava_idle                         #b8bb26;
+@define-color cava_hover                        #98971a;
+
+@define-color weather_idle                      #83a598;
+@define-color weather_hover                     #458588;
+
+@define-color temperature_idle                  #fe8019;
+@define-color temperature_hover                 #d65d0e;
+
+@define-color brightness_idle                   #fabd2f;
+@define-color brightness_hover                  #d79921;
+
+@define-color sound_idle                        #fabd2f;
+@define-color sound_hover                       #d79921;
+
+@define-color power_idle                        #fb4934;
+@define-color power_hover                       #cc241d;
+
+@define-color tooltip_background                #282828;
+@define-color tooltip_text                      #ebdbb2;
+
+/*----------------*/
+/*-----GLOBAL-----*/
+/*----------------*/
+
+* {
+    font-family: "Hurmit Nerd Font";
+    font-weight: 600;
+    font-size: 10px;
+}
+
+#waybar {
+    background-color: @modules_background;
+}
+
+/*--------------*/
+/*-----LOGO-----*/
+/*--------------*/
+
+#custom-logo {
+    margin-left: 10px;
+}
+
+/*--------------------*/
+/*-----WORKSPACES-----*/
+/*--------------------*/
+
+#workspaces {
+    margin-left: 10px;
+}
+
+#workspaces button {
+    color: @workspaces_button_off;
+
+    margin: 0px;
+    padding: 0px;
+
+    transition: all 0.3s ease;
+}
+
+#workspaces button.active {
+    color: @workspaces_button_on;
+
+    transition: all 0.3s ease;
+}
+
+#workspaces button:hover {
+    background: none;
+
+    color: @workspaces_button_on;
+
+    box-shadow: none;
+    text-shadow: none;
+    transition: none;
+    border-color: transparent;
+
+    transition: all 0.3s ease;
+}
+
+/*----------------*/
+/*-----WINDOW-----*/
+/*----------------*/
+
+#window {
+    margin-left: 10px;
+    margin-right: 10px;
+    color: @window;
+}
+
+/*----------------*/
+/*------TRAY------*/
+/*----------------*/
+
+#tray menu {
+    background-color: @tray_menu;
+    border: 2px solid @tray_menu_border;
+}
+
+#tray menu menuitem {
+    color: @tray_menu_item;
+}
+
+#tray menu menuitem:hover {
+    color: @tray_menu_item_hover;
+    background-color: @tray_menu_item_hover_background;
+}
+
+/*---------------*/
+/*-----CLOCK-----*/
+/*---------------*/
+
+#clock {
+    color: @clock_idle;
+
+    transition: all 0.3s ease;
+}
+
+#clock:hover {
+    color: @clock_hover;
+
+    transition: all 0.3s ease;
+}
+
+/*--------------*/
+/*-----CAVA-----*/
+/*--------------*/
+
+#custom-cava {
+    margin-left: 12px;
+    margin-right: 12px;
+
+    color: @cava_idle;
+
+    transition: all 0.3s ease;
+}
+
+#custom-cava:hover {
+    color: @cava_hover;
+
+    transition: all 0.3s ease;
+}
+
+/*-----------------*/
+/*-----WEATHER-----*/
+/*-----------------*/
+
+#custom-weather {
+    color: @weather_idle;
+
+    transition: all 0.3s ease;
+}
+
+#custom-weather:hover {
+    color: @weather_hover;
+
+    transition: all 0.3s ease;
+}
+
+/*-------------------*/
+/*----TEMPERATURE----*/
+/*-------------------*/
+
+#custom-temperature {
+    color: @temperature_idle;
+
+    margin-right: 12px;
+
+    transition: all 0.3s ease;
+}
+
+#custom-temperature:hover {
+    color: @temperature_hover;
+
+    transition: all 0.3s ease;
+}
+
+/*------------------*/
+/*----BRIGHTNESS----*/
+/*------------------*/
+
+#custom-brightness {
+    color: @brightness_idle;
+
+    margin-right: 12px;
+
+    transition: all 0.3s ease;
+}
+
+#custom-brightness:hover {
+    color: @brightness_hover;
+
+    transition: all 0.3s ease;
+}
+
+/*--------------*/
+/*----VOLUME----*/
+/*--------------*/
+
+#custom-volume {
+    color: @sound_idle;
+
+    margin-right: 12px;
+
+    transition: all 0.3s ease;
+}
+
+#custom-volume:hover {
+    color: @sound_hover;
+
+    transition: all 0.3s ease;
+}
+c
+
+/*-------------------*/
+/*-----GROUP END-----*/
+/*-------------------*/
+
+#group-end {
+    margin-right: 12px;
+}
+
+/*---------------*/
+/*-----POWER-----*/
+/*---------------*/
+
+#custom-power,
+#custom-record,
+#custom-reboot,
+#custom-lock {
+    color: @power_idle;
+
+    transition: all 0.3s ease;
+}
+
+#custom-power {
+    padding-right: 12px;
+}
+
+#custom-reboot {
+    padding-right: 12px;
+}
+
+#custom-lock {
+    padding-right: 12px;
+}
+
+#custom-record {
+    padding-right: 12px;
+}
+
+#custom-power:hover,
+#custom-reboot:hover,
+#custom-lock:hover,
+#custom-record:hover {
+    color: @power_hover;
+
+    transition: all 0.3s ease;
+}
+
+/*-----------------*/
+/*-----TOOLTIP-----*/
+/*-----------------*/
+
+tooltip {
+    background-color: @tooltip_background;
+}
+
+tooltip label {
+    color: @tooltip_text;
+}

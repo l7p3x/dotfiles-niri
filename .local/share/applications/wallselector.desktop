@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Wallpaper
+Comment=Selecionar wallpaper
+Exec=fish -c wallselector
+Icon=wallselector
+Terminal=false
+Type=Application
+Categories=Utility;

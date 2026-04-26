@@ -1,0 +1,164 @@
+{
+  "spacing": 0,
+  "position": "top",
+  "reload_style_on_change": true,
+  "modules-left": ["group/group-left"],
+  "modules-center": ["group/group-center"],
+  "modules-right": ["group/group-right"],
+  "group/group-left": {
+    "orientation": "horizontal",
+    "modules": ["custom/logo", "niri/workspaces", "niri/window", "tray"],
+  },
+
+  "group/group-center": {
+    "orientation": "horizontal",
+    "modules": ["clock", "custom/cava", "custom/weather"],
+  },
+
+  "group/group-right": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/temperature",
+      "custom/brightness",
+      "custom/volume",
+      "group/group-power",
+    ],
+  },
+
+  "custom/logo": {
+    "format": "<span size='12000'></span>",
+    "on-click": "fuzzel",
+  },
+
+  "niri/workspaces": {},
+
+  "niri/window": {
+    "format": "󰣆 {app_id}",
+    "tooltip-format": "App: {app_id}\nTitle: {title}",
+    "rewrite": {
+      ".*firefox.*": "<span rise='2000'>󰈹</span> Firefox",
+      ".*zed.*": "<span rise='1000'></span> Zeditor",
+      ".*alacritty.*": "<span rise='2000'></span> Alacritty",
+      ".*thunar.*": "<span rise='2000'>󰝰</span> Thunar",
+      ".*btop.*": "<span rise='2000'></span> Btop",
+      ".*abaddon.*": "<span rise='1000'>󰄛</span> Abaddon",
+      ".*gimp.*": "<span rise='2000'></span> GIMP",
+      ".*steam.*": "<span rise='2000'>󰓓</span> Steam",
+      ".*hydra.*": "<span rise='1000'>󰺵</span> Hydra",
+      ".*sober.*": "<span rise='1000'>󰺵</span> Sober",
+      ".*nwg-look.*": "<span rise='2000'>󰔎</span> Nwg-look",
+    },
+  },
+
+  "tray": {
+    "icon-size": 18,
+    "spacing": 6,
+  },
+
+  "clock": {
+    "format": "{:L%H:%M}",
+    "format-alt": "<span text_transform='capitalize'>{:L%a %d %b %H:%M}</span>",
+    "tooltip-format": "<tt>{calendar}</tt>",
+    "calendar": {
+      "mode": "year",
+      "mode-mon-col": 3,
+      "format": {
+        "months": "<span color='#d79921'><b>{}</b></span>",
+        "days": "<span color='#ebdbb2'><b>{}</b></span>",
+        "weekdays": "<span color='#98971a'><b>{}</b></span>",
+        "today": "<span color='#cc241d'><b><u>{}</u></b></span>",
+      },
+    },
+    "actions": {
+      "on-click": "shift_reset",
+      "on-scroll-up": "shift_up",
+      "on-scroll-down": "shift_down",
+    },
+  },
+
+  "custom/cava": {
+    "format": {},
+    "on-click": "playerctl play-pause",
+    "on-scroll-up": "playerctl next",
+    "on-scroll-down": "playerctl previous",
+    "exec": "~/.config/waybar/assets/cava.sh",
+  },
+
+  "custom/weather": {
+    "format": {},
+    "exec": "~/.config/waybar/assets/venv/bin/python3 ~/.config/waybar/assets/weather.py",
+    "restart-interval": 300,
+    "return-type": "json",
+    "on-click": "xdg-open https://weather.com/en-IN/weather/today/l/b50807551834e3f0925a5f7edaa00ed902aaf1e3b4313b9b031cb3a189dfb1db",
+  },
+
+  "custom/volume": {
+    "format": {},
+    "return-type": "json",
+    "exec": "~/.config/waybar/assets/volume_bar.sh",
+    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-click-right": "pavucontrol",
+    "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 10%+ --limit 1.0",
+    "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 10%-",
+    "tooltip": true,
+  },
+
+  "custom/temperature": {
+    "format": {},
+    "return-type": "json",
+    "tooltip": true,
+    "exec": "~/.config/waybar/assets/temperature_bar.sh",
+    "interval": 2,
+    "on-scroll-up": "~/.config/waybar/assets/temperature_bar.sh up",
+    "on-scroll-down": "~/.config/waybar/assets/temperature_bar.sh down",
+  },
+
+  "custom/brightness": {
+    "format": {},
+    "return-type": "json",
+    "tooltip": true,
+    "exec": "~/.config/waybar/assets/brightness_bar.sh",
+    "interval": 2,
+    "signal": 8,
+    "on-scroll-up": "~/.config/waybar/assets/brightness_bar.sh up",
+    "on-scroll-down": "~/.config/waybar/assets/brightness_bar.sh down",
+  },
+
+  "group/group-power": {
+    "orientation": "inherit",
+    "drawer": {
+      "transition-duration": 500,
+      "children-class": "not-power",
+      "transition-left-to-right": false,
+    },
+    "modules": [
+      "custom/power", // First element is the "group leader" and won't ever be hidden
+      "custom/record",
+      "custom/lock",
+      "custom/reboot",
+    ],
+  },
+  "custom/record": {
+    "format": "{}",
+    "tooltip": false,
+    "exec": "~/.config/waybar/assets/record.sh",
+    "on-click": "~/.config/waybar/assets/record.sh toggle",
+    "signal": 1,
+    "interval": "once",
+  },
+  "custom/lock": {
+    "format": "",
+    "tooltip": false,
+    "on-click": "~/.config/swaylock/config",
+  },
+  "custom/reboot": {
+    "format": "",
+    "tooltip": false,
+    "on-click": "systemctl reboot",
+  },
+  "custom/power": {
+    "format": "",
+    "tooltip": false,
+    "on-click": "systemctl poweroff",
+  },
+}

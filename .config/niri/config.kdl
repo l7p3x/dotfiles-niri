@@ -1,0 +1,643 @@
+// Este config está no formato KDL: https://kdl.dev
+// "/-" comenta o nó seguinte.
+// Veja o wiki para uma descrição completa da configuração:
+// https://yalter.github.io/niri/Configuration:-Introduction
+
+// Configuração de dispositivos de entrada.
+// Veja a lista completa de opções no wiki:
+// https://yalter.github.io/niri/Configuration:-Input
+input {
+    keyboard {
+        xkb {
+            layout "us"
+            variant "intl"
+        }
+        numlock
+    }
+
+    // As seções seguintes incluem configurações do libinput.
+    // Omitir configurações as desativa, ou as deixa com seus valores padrão.
+    // Todas as configurações comentadas aqui são exemplos, não padrões.
+    touchpad {
+        // off
+        tap
+        // dwt
+        // dwtp
+        // drag false
+        // drag-lock
+        natural-scroll
+        // accel-speed 0.2
+        // accel-profile "flat"
+        // scroll-method "two-finger"
+        // disabled-on-external-mouse
+    }
+
+    mouse {
+        // off
+        // natural-scroll
+        // accel-speed 0.2
+        // accel-profile "flat"
+        // scroll-method "no-scroll"
+    }
+
+    trackpoint {
+        // off
+        // natural-scroll
+        // accel-speed 0.2
+        // accel-profile "flat"
+        // scroll-method "on-button-down"
+        // scroll-button 273
+        // scroll-button-lock
+        // middle-emulation
+    }
+
+    // Descomente isto para fazer o mouse ir ao centro de janelas recém-focadas.
+    // warp-mouse-to-focus
+
+    // Foca janelas e saídas automaticamente ao mover o mouse sobre elas.
+    // Definir max-scroll-amount="0%" faz funcionar apenas em janelas já totalmente visíveis.
+    focus-follows-mouse max-scroll-amount="50%"
+
+    mod-key "Alt"
+}
+
+cursor {
+    xcursor-theme "Qogir-white-cursors"
+    xcursor-size 21
+    hide-when-typing
+    hide-after-inactive-ms 3000
+}
+
+// Você pode configurar saídas pelo nome, que pode ser encontrado
+// executando `niri msg outputs` dentro de uma instância niri.
+// O monitor integrado do laptop geralmente é chamado "eDP-1".
+// Mais informações no wiki:
+// https://yalter.github.io/niri/Configuration:-Outputs
+// Lembre-se de descomentar o nó removendo "/-"!
+output "VGA-1" {
+    mode "1366x768@59.790"
+    scale 1
+    // position x=1280 y=0
+}
+
+// Configurações que influenciam como janelas são posicionadas e dimensionadas.
+// Mais informações no wiki:
+// https://yalter.github.io/niri/Configuration:-Layout
+layout {
+    // Define espaços ao redor das janelas em pixels lógicos.
+    gaps 16
+
+    // Quando centralizar uma coluna ao mudar o foco, as opções são:
+    // - "never", comportamento padrão, focar uma coluna fora da tela a manterá na borda
+    //   esquerda ou direita da tela.
+    // - "always", a coluna focada será sempre centralizada.
+    // - "on-overflow", focar uma coluna a centralizará se ela não couber
+    //   junto com a coluna anteriormente focada.
+    center-focused-column "never"
+
+    // Você pode personalizar as larguras entre as quais "switch-preset-column-width" (Mod+R) alterna.
+    preset-column-widths {
+        // Proportion define a largura como fração da largura da saída, considerando os gaps.
+        // Por exemplo, você pode encaixar perfeitamente quatro janelas de "proportion 0.25" em uma saída.
+        // As larguras predefinidas padrão são 1/3, 1/2 e 2/3 da saída.
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+
+        // Fixed define a largura em pixels lógicos exatamente.
+        // fixed 1920
+    }
+
+    // Você também pode personalizar as alturas entre as quais "switch-preset-window-height" (Mod+Shift+R) alterna.
+    // preset-window-heights { }
+
+    // Você pode alterar a largura padrão das novas janelas.
+    // default-column-width { proportion 5.0; }
+    // Se deixar os colchetes vazios, as próprias janelas decidirão sua largura inicial.
+    default-column-width {}
+
+    // Por padrão, o anel de foco e a borda são renderizados como um retângulo de fundo sólido
+    // atrás das janelas. Ou seja, eles aparecerão através de janelas semitransparentes.
+    // Isso ocorre porque janelas com decorações do lado do cliente podem ter formato arbitrário.
+    //
+    // Se não gostar disso, descomente `prefer-no-csd` abaixo.
+    // O Niri desenhará o anel de foco e a borda *ao redor* de janelas que concordem em omitir suas
+    // decorações do lado do cliente.
+    //
+    // Alternativamente, você pode substituir isso com uma regra de janela chamada
+    // `draw-border-with-background`.
+
+    // Você pode alterar a aparência do anel de foco.
+    focus-ring {
+        // Descomente esta linha para desativar o anel de foco.
+        on
+
+        // Quantos pixels lógicos o anel se estende para fora das janelas.
+        width 2
+
+        // As cores podem ser definidas de várias formas:
+        // - Nomes de cores CSS: "red"
+        // - Hexadecimal RGB: "#rgb", "#rgba", "#rrggbb", "#rrggbbaa"
+        // - Notação tipo CSS: "rgb(255, 127, 0)", rgba(), hsl() e alguns outros.
+
+        // Cor do anel no monitor ativo.
+        active-color "#fabd2f"
+
+        // Cor do anel em monitores inativos.
+        //
+        // O anel de foco só é desenhado ao redor da janela ativa, então o único lugar
+        // onde você pode ver o inactive-color é em outros monitores.
+        inactive-color "#fe8019"
+
+        // Você também pode usar gradientes. Eles têm prioridade sobre cores sólidas.
+        // Gradientes são renderizados como CSS linear-gradient(ângulo, de, para).
+        // O ângulo é o mesmo que no linear-gradient, e é opcional,
+        // com padrão 180 (gradiente de cima para baixo).
+        // Você pode usar qualquer ferramenta de linear-gradient CSS na web para configurá-los.
+        // Alterar o espaço de cores também é suportado, veja o wiki para mais informações.
+        //
+        // active-gradient from="#b8bb26" to="#fe8019" angle=180
+
+        // Você também pode colorir o gradiente relativo a toda a visualização
+        // do espaço de trabalho, em vez de relativo apenas à janela em si.
+        // Para isso, defina relative-to="workspace-view".
+        //
+        // inactive-gradient from="#505050" to="#808080" angle=45 relative-to="workspace-view"
+    }
+
+    // Você também pode adicionar uma borda. É similar ao anel de foco, mas sempre visível.
+    border {
+        // As configurações são as mesmas do anel de foco.
+        // Se ativar a borda, provavelmente vai querer desativar o anel de foco.
+        off
+
+        width 4
+        active-color "#ffc87f"
+        inactive-color "#505050"
+
+        // Cor da borda ao redor de janelas que solicitam sua atenção.
+        urgent-color "#9b0000"
+
+        // Gradientes podem usar alguns espaços de interpolação de cores diferentes.
+        // Por exemplo, este é um gradiente arco-íris pastel via in="oklch longer hue".
+        //
+        // active-gradient from="#e5989b" to="#ffb4a2" angle=45 relative-to="workspace-view" in="oklch longer hue"
+
+        // inactive-gradient from="#505050" to="#808080" angle=45 relative-to="workspace-view"
+    }
+
+    // Você pode ativar sombras para janelas.
+    shadow {
+        // Descomente a próxima linha para ativar sombras.
+        // on
+
+        // Por padrão, a sombra é desenhada apenas ao redor da janela, e não atrás dela.
+        // Descomente esta configuração para fazer a sombra ser desenhada atrás da janela.
+        //
+        // Observe que o niri não tem como saber o raio do canto arredondado da janela CSD.
+        // Ele precisa assumir que as janelas têm cantos quadrados, levando a
+        // artefatos de sombra dentro dos cantos arredondados CSD. Esta configuração corrige
+        // esses artefatos.
+        //
+        // Porém, você pode querer definir prefer-no-csd e/ou
+        // geometry-corner-radius. Assim, o niri saberá o raio do canto e
+        // desenhará a sombra corretamente, sem precisar desenhá-la atrás da
+        // janela. Isso também removerá sombras do lado do cliente se a janela desenhar alguma.
+        //
+        // draw-behind-window true
+
+        // Você pode alterar a aparência das sombras. Os valores abaixo estão em pixels
+        // lógicos e correspondem às propriedades CSS box-shadow.
+
+        // Softness controla o raio de desfoque da sombra.
+        softness 30
+
+        // Spread expande a sombra.
+        spread 5
+
+        // Offset move a sombra em relação à janela.
+        offset x=0 y=5
+
+        // Você também pode alterar a cor e a opacidade da sombra.
+        color "#0007"
+    }
+
+    // Struts reduzem a área ocupada pelas janelas, de forma similar a painéis layer-shell.
+    // Pense neles como um tipo de gap externo. São definidos em pixels lógicos.
+    // Struts esquerdo e direito farão com que a próxima janela ao lado seja sempre visível.
+    // Struts superior e inferior simplesmente adicionam gaps externos além da área ocupada por
+    // painéis layer-shell e gaps regulares.
+    struts {
+        // left 64
+        // right 64
+        // top 64
+        // bottom 64
+    }
+}
+
+// Adicione linhas como esta para iniciar processos na inicialização.
+// Observe que executar o niri como sessão suporta xdg-desktop-autostart,
+// que pode ser mais conveniente de usar.
+// Veja a seção de binds abaixo para mais exemplos de spawn.
+
+// Esta linha inicia o waybar, uma barra comumente usada para compositores Wayland.
+spawn-at-startup "xwayland-satellite"
+spawn-at-startup "awww-daemon"
+
+environment {
+    DISPLAY ":0"
+}
+
+// Para executar um comando shell (com variáveis, pipes, etc.), use spawn-sh-at-startup:
+// spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
+spawn-sh-at-startup "SoundWireServer -platform xcb -nogui"
+spawn-sh-at-startup "gammastep -O 4500"
+spawn-sh-at-startup "awww img $HOME/.config/fuzzel/Wallpaper/current.png"
+spawn-sh-at-startup "~/.config/niri/swayidle"
+
+hotkey-overlay {
+    // Descomente esta linha para desativar o pop-up "Atalhos Importantes" na inicialização.
+    skip-at-startup
+}
+
+// Descomente esta linha para pedir aos clientes que omitam suas decorações do lado do cliente, se possível.
+// Se o cliente pedir especificamente por CSD, o pedido será atendido.
+// Além disso, os clientes serão informados de que estão lado a lado, removendo alguns cantos arredondados do lado do cliente.
+// Esta opção também corrigirá o desenho de borda/anel de foco atrás de algumas janelas semitransparentes.
+// Após ativar ou desativar isso, você precisa reiniciar os aplicativos para que tenha efeito.
+prefer-no-csd
+
+// Você pode alterar o caminho onde as capturas de tela são salvas.
+// Um ~ no início será expandido para o diretório home.
+// O caminho é formatado com strftime(3) para fornecer a data e hora da captura de tela.
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+// Você também pode definir isso como null para desativar o salvamento de capturas de tela em disco.
+// screenshot-path null
+
+// Configurações de animação.
+// O wiki explica como configurar animações individuais:
+// https://yalter.github.io/niri/Configuration:-Animations
+animations {
+    // Descomente para desativar todas as animações.
+    // off
+
+    // Desacelera todas as animações por este fator. Valores abaixo de 1 as aceleram.
+    // slowdown 3.0
+}
+
+// Regras de janela permitem ajustar o comportamento para janelas individuais.
+// Mais informações no wiki:
+// https://yalter.github.io/niri/Configuration:-Window-Rules
+
+// Contorna o bug de configuração inicial do WezTerm
+// definindo um default-column-width vazio.
+window-rule {
+    // Esta expressão regular foi intencionalmente feita o mais específica possível,
+    // já que esta é a config padrão e queremos evitar falsos positivos.
+    // Você pode usar apenas app-id="wezterm" se preferir.
+    match app-id=r#"^org\.wezfurlong\.wezterm$"#
+    default-column-width {}
+}
+
+// Abre o player picture-in-picture do Firefox como flutuante por padrão.
+window-rule {
+    // Esta expressão regular de app-id funcionará tanto para:
+    // - Firefox nativo (app-id é "firefox")
+    // - Firefox Flatpak (app-id é "org.mozilla.firefox")
+    match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    open-floating true
+}
+
+window-rule {
+    match app-id="alacritty-float"
+    open-floating true
+}
+
+window-rule {
+    match app-id="Thunar|thunar"
+    open-floating true
+    default-column-width { proportion 0.55; }
+    default-window-height { fixed 600; }
+}
+
+window-rule {
+    match is-floating=true
+    opacity 0.9
+}
+
+// Exemplo: ocultar dois gerenciadores de senhas da captura de tela.
+// (Esta regra de exemplo está comentada com "/-" na frente.)
+/-window-rule {
+    match app-id=r#"^org\.keepassxc\.KeePassXC$"#
+    match app-id=r#"^org\.gnome\.World\.Secrets$"#
+
+    block-out-from "screen-capture"
+
+    // Use isto se quiser que fiquem visíveis em ferramentas de captura de tela de terceiros.
+    // block-out-from "screencast"
+}
+
+// Exemplo: ativar cantos arredondados para todas as janelas.
+// (Esta regra de exemplo está comentada com "/-" na frente.)
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
+binds {
+    // As teclas consistem em modificadores separados por sinais +, seguidos por um nome de tecla XKB
+    // no final. Para encontrar um nome XKB de uma tecla específica, você pode usar um programa
+    // como wev.
+    //
+    // "Mod" é um modificador especial igual a Super quando executado em um TTY, e a Alt
+    // quando executado como janela winit.
+    //
+    // A maioria das ações que você pode vincular aqui também pode ser invocada programaticamente com
+    // `niri msg action do-something`.
+
+    // Mod-Shift-/, que geralmente é o mesmo que Mod-?,
+    // mostra uma lista de atalhos importantes.
+    Mod+Shift+Slash { show-hotkey-overlay; }
+
+    // Atalhos sugeridos para executar programas: terminal, lançador de apps, bloqueador de tela.
+    Alt+T { spawn "alacritty"; }
+    Alt+A { spawn "abaddon"; }
+    Alt+Z { spawn "zeditor"; }
+    Alt+G { spawn "gimp"; }
+    Alt+E { spawn "thunar"; }
+    Alt+F { spawn "firefox"; }
+
+
+    // Programas class
+    Alt+Shift+T { spawn "alacritty" "--class" "alacritty-float"; }
+    Ctrl+Shift+Escape { spawn "alacritty" "--class" "btop" "-e" "btop"; }
+
+    // Launcher
+    Alt+D { spawn "fuzzel"; }
+
+    // Lock
+    Super+Alt+L { spawn "~/.config/swaylock/config"; }
+
+    // Use spawn-sh para executar um comando shell. Faça isso se precisar de pipes, múltiplos comandos, etc.
+    // Nota: o comando inteiro vai como um único argumento. É passado literalmente para `sh -c`.
+    // Por exemplo, este é um atalho padrão para alternar o leitor de tela (orca).
+    Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
+
+    // Exemplos de mapeamentos de teclas de volume para PipeWire & WirePlumber.
+    // A propriedade allow-when-locked=true faz com que funcionem mesmo com a sessão bloqueada.
+    // Usar spawn-sh permite passar múltiplos argumentos junto com o comando.
+    // "-l 1.0" limita o volume a 100%.
+    XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-"; }
+    XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+
+    // Exemplos de mapeamentos de teclas de mídia usando playerctl.
+    // Funcionará com qualquer reprodutor de mídia com suporte a MPRIS.
+    XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
+    XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
+    XF86AudioPrev        allow-when-locked=true { spawn-sh "playerctl previous"; }
+    XF86AudioNext        allow-when-locked=true { spawn-sh "playerctl next"; }
+
+    // Exemplos de mapeamentos de teclas de brilho para brightnessctl.
+    // Você pode usar spawn regular com múltiplos argumentos também (para evitar passar por "sh"),
+    // mas precisa colocar cada argumento manualmente entre aspas "" separadas.
+    XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+
+    // Abre/fecha a Visão Geral: uma visualização com zoom reduzido de espaços de trabalho e janelas.
+    // Você também pode mover o mouse para o canto superior esquerdo,
+    // ou fazer um deslize de quatro dedos para cima no touchpad.
+    Mod+Space repeat=false { toggle-overview; }
+
+    Alt+Q repeat=false { close-window; }
+
+    Alt+Left  { focus-column-left; }
+    Alt+Down  { focus-window-down; }
+    Alt+Up    { focus-window-up; }
+    Alt+Right { focus-column-right; }
+    Alt+H     { focus-column-left; }
+    Alt+J     { focus-window-down; }
+    Alt+K     { focus-window-up; }
+    Alt+L     { focus-column-right; }
+
+    Alt+Shift+Left  { move-column-left; }
+    Alt+Shift+Down  { move-window-down; }
+    Alt+Shift+Up    { move-window-up; }
+    Alt+Shift+Right { move-column-right; }
+    Alt+Ctrl+H     { move-column-left; }
+    Alt+Ctrl+J     { move-window-down; }
+    Alt+Ctrl+K     { move-window-up; }
+    Alt+Ctrl+L     { move-column-right; }
+
+    // Comandos alternativos que se movem entre espaços de trabalho ao chegar
+    // na primeira ou última janela de uma coluna.
+    // Mod+J     { focus-window-or-workspace-down; }
+    // Mod+K     { focus-window-or-workspace-up; }
+    // Mod+Ctrl+J     { move-window-down-or-to-workspace-down; }
+    // Mod+Ctrl+K     { move-window-up-or-to-workspace-up; }
+
+    Alt+Home { focus-column-first; }
+    Alt+End  { focus-column-last; }
+    Alt+Ctrl+Home { move-column-to-first; }
+    Alt+Ctrl+End  { move-column-to-last; }
+
+    Alt+Ctrl+Left  { focus-monitor-left; }
+    Alt+Ctrl+Down  { focus-monitor-down; }
+    Alt+Ctrl+Up    { focus-monitor-up; }
+    Alt+Ctrl+Right { focus-monitor-right; }
+    Alt+Shift+H     { focus-monitor-left; }
+    Alt+Shift+J     { focus-monitor-down; }
+    Alt+Shift+K     { focus-monitor-up; }
+    Alt+Shift+L     { focus-monitor-right; }
+
+    Alt+Shift+Ctrl+Left  { move-column-to-monitor-left; }
+    Alt+Shift+Ctrl+Down  { move-column-to-monitor-down; }
+    Alt+Shift+Ctrl+Up    { move-column-to-monitor-up; }
+    Alt+Shift+Ctrl+Right { move-column-to-monitor-right; }
+    Alt+Shift+Ctrl+H     { move-column-to-monitor-left; }
+    Alt+Shift+Ctrl+J     { move-column-to-monitor-down; }
+    Alt+Shift+Ctrl+K     { move-column-to-monitor-up; }
+    Alt+Shift+Ctrl+L     { move-column-to-monitor-right; }
+
+    // Alternativamente, há comandos para mover apenas uma única janela:
+    // Mod+Shift+Ctrl+Left  { move-window-to-monitor-left; }
+    // ...
+
+    // E você também pode mover um espaço de trabalho inteiro para outro monitor:
+    // Mod+Shift+Ctrl+Left  { move-workspace-to-monitor-left; }
+    // ...
+
+    Alt+Page_Down      { focus-workspace-down; }
+    Alt+Page_Up        { focus-workspace-up; }
+    Alt+U              { focus-workspace-down; }
+    Alt+I              { focus-workspace-up; }
+    Alt+Ctrl+Page_Down { move-column-to-workspace-down; }
+    Alt+Ctrl+Page_Up   { move-column-to-workspace-up; }
+    Alt+Ctrl+U         { move-column-to-workspace-down; }
+    Alt+Ctrl+I         { move-column-to-workspace-up; }
+
+    // Alternativamente, há comandos para mover apenas uma única janela:
+    // Mod+Ctrl+Page_Down { move-window-to-workspace-down; }
+    // ...
+
+    Alt+Shift+Page_Down { move-workspace-down; }
+    Alt+Shift+Page_Up   { move-workspace-up; }
+    Alt+Shift+U         { move-workspace-down; }
+    Alt+Shift+I         { move-workspace-up; }
+
+    // Você pode vincular tiques de rolagem do mouse usando a seguinte sintaxe.
+    // Esses atalhos mudarão de direção com base na configuração de natural-scroll.
+    //
+    // Para evitar rolar pelos espaços de trabalho muito rápido, você pode usar
+    // a propriedade cooldown-ms. O atalho será limitado a este valor.
+    // Você pode definir um cooldown em qualquer atalho, mas é mais útil para o scroll.
+    Alt+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
+    Alt+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
+    Alt+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Alt+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
+
+    Alt+WheelScrollRight      { focus-column-right; }
+    Alt+WheelScrollLeft       { focus-column-left; }
+    Alt+Ctrl+WheelScrollRight { move-column-right; }
+    Alt+Ctrl+WheelScrollLeft  { move-column-left; }
+
+    // Normalmente rolar para cima e para baixo com Shift nos aplicativos resulta em
+    // rolagem horizontal; esses atalhos replicam isso.
+    Alt+Shift+WheelScrollDown      { focus-column-right; }
+    Alt+Shift+WheelScrollUp        { focus-column-left; }
+    Alt+Ctrl+Shift+WheelScrollDown { move-column-right; }
+    Alt+Ctrl+Shift+WheelScrollUp   { move-column-left; }
+
+    // Da mesma forma, você pode vincular "tiques" de rolagem do touchpad.
+    // A rolagem do touchpad é contínua, então para esses atalhos ela é dividida em
+    // intervalos discretos.
+    // Esses atalhos também são afetados pelo natural-scroll do touchpad, então esses
+    // atalhos de exemplo são "invertidos", já que temos natural-scroll ativado para
+    // touchpads por padrão.
+    // Mod+TouchpadScrollDown { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.02+"; }
+    // Mod+TouchpadScrollUp   { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.02-"; }
+
+    // Você pode se referir a espaços de trabalho por índice. Porém, lembre-se que
+    // o niri é um sistema de espaços de trabalho dinâmico, então esses comandos são meio
+    // "melhor esforço". Tentar se referir a um índice de espaço de trabalho maior que
+    // a contagem atual de espaços de trabalho irá, em vez disso, se referir ao mais abaixo
+    // (espaço de trabalho vazio).
+    //
+    // Por exemplo, com 2 espaços de trabalho + 1 vazio, os índices 3, 4, 5 e assim por diante
+    // se referirão todos ao 3º espaço de trabalho.
+    Alt+1 { focus-workspace 1; }
+    Alt+2 { focus-workspace 2; }
+    Alt+3 { focus-workspace 3; }
+    Alt+4 { focus-workspace 4; }
+    Alt+5 { focus-workspace 5; }
+    Alt+6 { focus-workspace 6; }
+    Alt+7 { focus-workspace 7; }
+    Alt+8 { focus-workspace 8; }
+    Alt+9 { focus-workspace 9; }
+    Alt+Shift+1 { move-column-to-workspace 1; }
+    Alt+Shift+2 { move-column-to-workspace 2; }
+    Alt+Shift+3 { move-column-to-workspace 3; }
+    Alt+Shift+4 { move-column-to-workspace 4; }
+    Alt+Shift+5 { move-column-to-workspace 5; }
+    Alt+Shift+6 { move-column-to-workspace 6; }
+    Alt+Shift+7 { move-column-to-workspace 7; }
+    Alt+Shift+8 { move-column-to-workspace 8; }
+    Alt+Shift+9 { move-column-to-workspace 9; }
+
+    // Alternativamente, há comandos para mover apenas uma única janela:
+    // Mod+Ctrl+1 { move-window-to-workspace 1; }
+
+    // Alterna o foco entre o espaço de trabalho atual e o anterior.
+    // Mod+Tab { focus-workspace-previous; }
+
+    // Os atalhos a seguir movem a janela focada para dentro e para fora de uma coluna.
+    // Se a janela estiver sozinha, ela será consumida na coluna próxima ao lado.
+    // Se a janela já estiver em uma coluna, ela será expulsa para fora.
+    Alt+BracketLeft  { consume-or-expel-window-left; }
+    Alt+BracketRight { consume-or-expel-window-right; }
+
+    // Consome uma janela da direita para o fundo da coluna focada.
+    Alt+Comma  { consume-window-into-column; }
+    // Expulsa a janela do fundo da coluna focada para a direita.
+    Alt+Period { expel-window-from-column; }
+
+    Mod+R { switch-preset-column-width; }
+    // Também é possível percorrer os presets na ordem inversa.
+    // Mod+R { switch-preset-column-width-back; }
+    Alt+Shift+R { switch-preset-window-height; }
+    Alt+Ctrl+R { reset-window-height; }
+    Super+Tab { maximize-column; }
+    F11 { fullscreen-window; }
+
+    // Expande a coluna focada para o espaço não ocupado por outras colunas totalmente visíveis.
+    // Faz a coluna "preencher o restante do espaço".
+    Alt+Ctrl+F { expand-column-to-available-width; }
+
+    // Alt+C { center-column; }
+
+    // Centraliza todas as colunas totalmente visíveis na tela.
+    Alt+Ctrl+C { center-visible-columns; }
+
+    // Ajustes mais finos de largura.
+    // Este comando também pode:
+    // * definir largura em pixels: "1000"
+    // * ajustar largura em pixels: "-5" ou "+5"
+    // * definir largura como porcentagem da largura da tela: "25%"
+    // * ajustar largura como porcentagem da largura da tela: "-10%" ou "+10%"
+    // Tamanhos em pixels usam pixels lógicos, ou escalados. Ou seja, em uma saída com scale 2.0,
+    // set-column-width "100" fará a coluna ocupar 200 pixels físicos da tela.
+    Alt+Minus { set-column-width "-10%"; }
+    Alt+Equal { set-column-width "+10%"; }
+
+    // Ajustes mais finos de altura quando em coluna com outras janelas.
+    Alt+Shift+Minus { set-window-height "-10%"; }
+    Alt+Shift+Equal { set-window-height "+10%"; }
+
+    // Move a janela focada entre o layout flutuante e o lado a lado.
+    Alt+V       { toggle-window-floating; }
+    Alt+Shift+V { switch-focus-between-floating-and-tiling; }
+
+    // Alterna o modo de exibição em abas da coluna.
+    // As janelas nesta coluna aparecerão como abas verticais,
+    // em vez de empilhadas umas sobre as outras.
+    Alt+W { toggle-column-tabbed-display; }
+
+    // Ações para alternar layouts.
+    // Nota: se você descomentar estas, certifique-se de NÃO ter
+    // um atalho de troca de layout correspondente configurado nas opções xkb acima.
+    // Ter os dois ao mesmo tempo no mesmo atalho quebrará a troca,
+    // pois ela ocorrerá duas vezes ao pressionar o atalho (uma pelo xkb, uma pelo niri).
+    // Mod+Space       { switch-layout "next"; }
+    // Mod+Shift+Space { switch-layout "prev"; }
+
+    Print { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print { screenshot-window; }
+
+
+    // Aplicativos como clientes de desktop remoto e switches KVM por software podem
+    // solicitar que o niri pare de processar os atalhos de teclado definidos aqui
+    // para que possam, por exemplo, encaminhar as teclas pressionadas para uma máquina remota.
+    // É uma boa ideia vincular uma saída de emergência para alternar o inibidor,
+    // para que um aplicativo com bug não mantenha sua sessão como refém.
+    //
+    // A propriedade allow-inhibiting=false pode ser aplicada a outros atalhos também,
+    // o que garante que o niri sempre os processe, mesmo quando um inibidor estiver ativo.
+    Alt+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+
+    // A ação quit mostrará um diálogo de confirmação para evitar saídas acidentais.
+    Alt+Shift+E { quit; }
+    Ctrl+Alt+Delete { quit; }
+
+    // Desliga os monitores. Para ligá-los novamente, faça qualquer entrada como
+    // mover o mouse ou pressionar qualquer outra tecla.
+    Alt+Shift+P { power-off-monitors; }
+
+    // Notifacoes teste
+    Alt+M { spawn "bash" "-c" "pkill mako; mako & sleep 0.3 && notify-send 'Mako Teste' 'Notificação funcionando!'"; }
+
+    // Waybar
+    Mod5+slash { spawn "bash" "-c" "if pgrep -x waybar > /dev/null; then pkill -x waybar; else waybar & fi"; }
+}

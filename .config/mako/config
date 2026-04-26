@@ -1,0 +1,46 @@
+# ===== POSIÇÃO =====
+anchor=top-center
+text-alignment=center
+margin=20
+padding=12
+
+# ===== TAMANHO =====
+width=360
+height=110
+# max-width=420
+
+# ===== TIPOGRAFIA =====
+font=Hurmit Nerd Font 10
+
+# ===== GRUVBOX DARK =====
+background-color=#282828de
+text-color=#ebdbb2
+border-color=#b8bb26
+border-size=0
+border-radius=10
+
+# ===== PROGRESS BAR =====
+progress-color=over #83a598
+
+# ===== COMPORTAMENTO =====
+default-timeout=3500
+ignore-timeout=0
+
+# ===== ÍCONES =====
+icons=1
+max-icon-size=32
+
+# ===== AGRUPAMENTO =====
+group-by=app-name
+
+# ===== FORMATAÇÃO =====
+format=<b>%s</b>\n%b
+
+# ===== URGÊNCIA =====
+[urgency=high]
+border-color=#fb4934
+default-timeout=0
+
+[urgency=low]
+border-color=#928374
+default-timeout=2000
