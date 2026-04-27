@@ -131,10 +131,12 @@ run() {
 }
 
 # ── Interactive confirm (respects --yes and --dry-run) ───────────────────────
+# Requer que o usuário digite "y" (ou "Y") e pressione Enter para confirmar.
+# Um único caractere sem Enter não é aceito — evita confirmações acidentais.
 confirm() {
   $FLAG_DRY_RUN && return 0
   $FLAG_YES     && return 0
-  ask "$1 [y/N] "; read -r -n1 reply; echo
+  ask "$1 [y/N] "; read -r reply; echo
   [[ "$reply" =~ ^[Yy]$ ]]
 }
 
@@ -393,32 +395,39 @@ cmd_bootstrap() {
     warn "xdg-user-dirs not found — skipping."
   fi
 
-  # ── B7: git configuration ──────────────────────────────────────────────────
-  section "B7 · git configuration"
+  # ── B7: git configuration (opcional) ──────────────────────────────────────
+  section "B7 · git configuration (optional)"
 
   local cur_name;  cur_name="$(git  config --global user.name  2>/dev/null || true)"
   local cur_email; cur_email="$(git config --global user.email 2>/dev/null || true)"
 
-  if [[ -z "$cur_name" || -z "$cur_email" ]]; then
-    if $FLAG_YES; then
-      warn "git identity not configured. Configure manually later:"
-      warn "  git config --global user.name  'Your Name'"
-      warn "  git config --global user.email 'your@email.com'"
-    else
-      local git_name="" git_email=""
-      ask "git user.name  [${cur_name:-<empty>}]: "; read -r git_name; echo
-      ask "git user.email [${cur_email:-<empty>}]: "; read -r git_email; echo
-      [[ -n "$git_name"  ]] && run git config --global user.name "$git_name"
+  if [[ -n "$cur_name" && -n "$cur_email" ]]; then
+    skip "git identity already set: $cur_name <$cur_email>"
+  elif $FLAG_YES; then
+    # Modo não-interativo: não bloqueia, apenas avisa
+    warn "git identity not configured (optional). Set it later with:"
+    warn "  git config --global user.name  'Your Name'"
+    warn "  git config --global user.email 'your@email.com'"
+  else
+    # Modo interativo: oferece configurar, mas deixa em branco ser válido
+    info "git identity is not set. This is optional — press Enter to skip."
+    local git_name="" git_email=""
+
+    ask "git user.name  [Enter to skip]: "; read -r git_name
+    ask "git user.email [Enter to skip]: "; read -r git_email
+
+    if [[ -n "$git_name" || -n "$git_email" ]]; then
+      [[ -n "$git_name"  ]] && run git config --global user.name  "$git_name"
       [[ -n "$git_email" ]] && run git config --global user.email "$git_email"
       run git config --global init.defaultBranch main
       run git config --global pull.rebase false
       run git config --global core.autocrlf input
       ok "git identity configured."
       state::log "GIT identity set: ${git_name:-<skip>} <${git_email:-<skip>}>"
+      state::set "git.configured" "$(date '+%Y-%m-%d %H:%M:%S')"
+    else
+      skip "git identity skipped — configure manually later if needed."
     fi
-    state::set "git.configured" "$(date '+%Y-%m-%d %H:%M:%S')"
-  else
-    skip "git identity already set: $cur_name <$cur_email>"
   fi
 
   state::set "bootstrap.done" "$(date '+%Y-%m-%d %H:%M:%S')"
@@ -623,13 +632,23 @@ run_deploy() {
 
     run chmod -R u+rw,go+r "$WALL_DST"
 
-    # Recria o symlink current.png apontando para o usuário atual (genérico)
+    # Escolhe um wallpaper aleatório e cria o symlink current.png
     local first_wall; first_wall="$(find "$WALL_DST" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | shuf | head -n1)"
     local current_link="$HOME/.local/share/wallpaper/current.png"
     if [[ -n "$first_wall" ]]; then
       run ln -sf "$first_wall" "$current_link"
-      ok "Wallpaper current → $(basename "$first_wall")"
+
+      # Exibe o nome do wallpaper escolhido de forma amigável
+      local wall_name; wall_name="$(basename "$first_wall")"
+      ok "Wallpaper → $wall_name 🖼"
+
+      # Conta quantos wallpapers estão disponíveis no total
+      local wall_count; wall_count="$(find "$WALL_DST" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | wc -l)"
+      info "$(printf '%d wallpaper(s) disponível(is) em %s' "$wall_count" "$WALL_DST")"
+
       state::set "wallpaper.current" "$first_wall"
+    else
+      warn "Nenhum wallpaper (.png/.jpg) encontrado em $WALL_DST."
     fi
 
     ok "Wallpapers synced → $WALL_DST"
@@ -882,12 +901,11 @@ MIME
     run gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
     ok "Icon theme → $icon_theme"
 
-    # Cursor theme
-    local cursor_theme="Qogir"
-    if pacman -Qq qogir-cursor-theme &>/dev/null 2>&1; then
-      local det_cur; det_cur="$(find /usr/share/icons "$HOME/.local/share/icons" \
-        -maxdepth 1 -type d -iname 'Qogir*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
-      [[ -n "$det_cur" ]] && cursor_theme="$det_cur"
+    # Cursor theme — Qogir-white-cursors como padrão, fallback para Qogir
+    local cursor_theme="Qogir-white-cursors"
+    if ! find /usr/share/icons "$HOME/.local/share/icons" \
+        -maxdepth 1 -type d -name 'Qogir-white-cursors' 2>/dev/null | grep -q .; then
+      cursor_theme="Qogir"
     fi
     run gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" 2>/dev/null || true
     ok "Cursor theme → $cursor_theme"
