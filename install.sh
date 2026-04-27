@@ -69,7 +69,7 @@ FLAG_DRY_RUN=false
 FLAG_FORCE=false
 FLAG_YES=false
 PROFILE="default"
-COMMAND="install"
+COMMAND="auto"
 
 # =============================================================================
 #  CLI
@@ -80,8 +80,9 @@ usage() {
 Usage:  $(basename "$0") [COMMAND] [OPTIONS]
 
 Commands:
+  (none)              Full auto: bootstrap + install (recommended for new users)
   bootstrap           Install base system from scratch (base-devel → yay → core)
-  install             Deploy dotfiles (default)
+  install             Deploy dotfiles
   update              Re-deploy only changed files
   rollback            Restore last backed-up files
   status              Show current install state
@@ -92,13 +93,13 @@ Options:
   --no-backup         Skip backup (overwrite directly)
   --dry-run           Show what would be done, do nothing
   --force             Ignore install lock, re-run fully
-  --yes               Non-interactive: skip all prompts
+  --yes               Non-interactive mode
   --profile NAME      Use a named profile (default: "default")
   -h, --help          This message
 
-Typical fresh-install flow:
-  $(basename "$0") bootstrap
-  $(basename "$0") install --install-packages
+Quick start (just clone and run):
+  git clone https://github.com/l7p3x/dotfile-niri.git
+  cd dotfile-niri && ./install.sh
 
 EOF
   exit 0
@@ -106,7 +107,7 @@ EOF
 
 for arg in "$@"; do
   case "$arg" in
-    bootstrap|install|update|rollback|status) COMMAND="$arg" ;;
+    bootstrap|install|update|rollback|status|auto) COMMAND="$arg" ;;
     --install-packages) FLAG_INSTALL_PKGS=true ;;
     --symlink)          FLAG_SYMLINK=true ;;
     --no-backup)        FLAG_NO_BACKUP=true ;;
@@ -606,11 +607,12 @@ run_deploy() {
     run mkdir -p "$WALL_DST"
 
     if command -v rsync &>/dev/null; then
+      # --exclude current.png para não copiar o symlink hardcoded do repo
       run rsync -rlpt --exclude='current.png' "$WALL_SRC/" "$WALL_DST/"
     else
-      # copia todos exceto o symlink current.png
+      # copia todos exceto symlinks (current.png)
       find "$WALL_SRC" -maxdepth 1 -type f | while read -r wfile; do
-        run cp -n "$wfile" "$WALL_DST/"
+        run cp "$wfile" "$WALL_DST/"
       done
     fi
 
@@ -738,6 +740,29 @@ run_deploy() {
     fi
   else
     skip "fish not installed — skipping configs."
+  fi
+
+  # ── 6c · Fish como shell padrão ──────────────────────────────────────────
+  section "6c · Default shell → fish"
+  if command -v fish &>/dev/null; then
+    local fish_bin; fish_bin="$(command -v fish)"
+
+    # Garante que fish está em /etc/shells
+    if ! grep -qF "$fish_bin" /etc/shells 2>/dev/null; then
+      info "Adding fish to /etc/shells…"
+      run bash -c "echo '$fish_bin' | sudo tee -a /etc/shells > /dev/null"
+    fi
+
+    local current_shell; current_shell="$(getent passwd "$USER" | cut -d: -f7)"
+    if [[ "$current_shell" != "$fish_bin" ]]; then
+      run chsh -s "$fish_bin" "$USER"
+      ok "Default shell → fish (re-login required)"
+      state::log "SHELL changed to fish"
+    else
+      skip "Shell already fish."
+    fi
+  else
+    warn "fish not found — skipping shell change."
   fi
 
   # ── 7a · Ícones locais ────────────────────────────────────────────────────
@@ -913,6 +938,14 @@ MIME
   check_required_bins
 
   # ── Persist state ─────────────────────────────────────────────────────────
+  # Garante que o symlink de wallpaper (que aponta para path local do usuário)
+  # nunca é versionado por acidente
+  local gitignore="$SCRIPT_DIR/.gitignore"
+  if [[ -f "$gitignore" ]] && ! grep -qF ".local/share/wallpaper" "$gitignore"; then
+    echo ".local/share/wallpaper/" >> "$gitignore"
+    ok ".gitignore: protegido .local/share/wallpaper/"
+  fi
+
   state::set "profile.current" "$PROFILE"
   state::set_lock
 }
@@ -946,6 +979,33 @@ cmd_install() {
 }
 
 # =============================================================================
+#  COMMAND: auto  (default — full install for new users)
+# =============================================================================
+cmd_auto() {
+  section "Auto — bootstrap + install (full setup)"
+
+  ! command -v pacman &>/dev/null && { err "pacman not found. Arch-based distro only."; exit 1; }
+  [[ "$EUID" -eq 0 ]]             && { err "Do not run as root. sudo is used internally."; exit 1; }
+
+  echo ""
+  echo -e "  ${C_BOLD}This will:${C_RESET}"
+  echo -e "  ${C_DIM}1. Install yay (AUR helper) if needed${C_RESET}"
+  echo -e "  ${C_DIM}2. Install all required packages${C_RESET}"
+  echo -e "  ${C_DIM}3. Set fish as default shell${C_RESET}"
+  echo -e "  ${C_DIM}4. Deploy all configs, themes, fonts and wallpapers${C_RESET}"
+  echo ""
+
+  confirm "Proceed with full setup?" || { info "Aborted."; exit 0; }
+
+  # Bootstrap (skip se já feito)
+  cmd_bootstrap
+
+  # Install com packages
+  FLAG_INSTALL_PKGS=true
+  cmd_install
+}
+
+# =============================================================================
 #  COMMAND: update
 # =============================================================================
 cmd_update() {
@@ -963,6 +1023,7 @@ state::init
 [[ "$COMMAND" == "bootstrap" && "$EUID" -eq 0 ]] && { err "Do not run as root."; exit 1; }
 
 case "$COMMAND" in
+  auto)      cmd_auto ;;
   bootstrap) cmd_bootstrap ;;
   install)   cmd_install ;;
   update)    cmd_update ;;
