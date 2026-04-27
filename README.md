@@ -1,10 +1,115 @@
-# 󰣇 dotfile-niri
+# dotfile-niri
 
-My personal **Niri dotfiles** setup — clean, comfy, and easy to copy.
+This is my main Niri dots repo. It contains user configs for Wayland apps and an install script that can bootstrap and deploy everything.
 
-## 󰋩 Quick look
+## Installation
 
-A simple desktop setup with wallpapers, screenshots, and a ready install script.
+Clone the repo and run the installer from inside the project directory.
+
+```bash
+git clone https://github.com/l7p3x/dotfile-niri.git ~/.local/share/dotfile-niri
+cd ~/.local/share/dotfile-niri
+./install.sh
+```
+
+The default run uses the `auto` flow (`bootstrap + install`).
+
+## Warning
+
+The installer can deploy files in two modes:
+
+- default: copy files to your `$HOME`
+- `--symlink`: symlink files from this repo into your `$HOME`
+
+If you use `--symlink`, do **not** move or delete this repo folder later, or your desktop config will break.
+
+## Installer commands
+
+```bash
+./install.sh --help
+```
+
+```text
+Commands:
+  (none)              Full auto: bootstrap + install
+  bootstrap           Install base system from scratch
+  install             Deploy dotfiles
+  update              Re-deploy only changed files
+  rollback            Restore last backed-up files
+  status              Show current install state
+```
+
+```text
+Options:
+  --install-packages  Install packages via yay/pacman
+  --symlink           Use symlinks instead of copies
+  --no-backup         Skip backup
+  --dry-run           Show actions without changing anything
+  --force             Ignore install lock
+  --yes               Non-interactive mode
+  --profile=NAME      Use a profile name
+  -h, --help          Show help
+```
+
+## Quick examples
+
+Full setup:
+
+```bash
+./install.sh
+```
+
+Only bootstrap dependencies:
+
+```bash
+./install.sh bootstrap
+```
+
+Install configs with symlinks:
+
+```bash
+./install.sh install --symlink
+```
+
+Update after pulling new changes:
+
+```bash
+git pull
+./install.sh update
+```
+
+Check current state:
+
+```bash
+./install.sh status
+```
+
+Rollback backups created during deploy:
+
+```bash
+./install.sh rollback
+```
+
+## Manual installation
+
+If you want to do everything manually:
+
+1. Install core dependencies (Niri, Waybar, Fuzzel, Mako, Fish, Alacritty, Thunar, fonts, etc.).
+2. Copy or symlink this repo's `.config/` entries to `~/.config/`.
+3. Copy or symlink `.local/bin/` scripts to `~/.local/bin/`.
+4. Copy `.local/share/applications/`, `.local/share/icons/`, and `.local/share/fonts/` into your local share directory.
+5. Log out and log back in.
+
+## Repository layout
+
+- `.config/` → app configs (niri, waybar, fish, mako, fuzzel, alacritty, etc.)
+- `.local/bin/` → helper scripts
+- `.local/share/` → local desktop assets (icons, desktop files, fonts)
+- `Wallpaper/` → wallpaper collection
+- `screenshots/` → preview images and video
+- `install.sh` → installer and update/rollback/status workflow
+
+## Preview
 
 | Desktop | Terminal |
 |---|---|
@@ -14,49 +119,4 @@ A simple desktop setup with wallpapers, screenshots, and a ready install script.
 |---|---|
 | ![Fuzzel](screenshots/fuzzel.png) | ![Desktop 2](screenshots/desktop2.png) |
 
-󰈹 **Video preview:** [`screenshots/preview.mp4`](screenshots/preview.mp4)
-
-## 󰙅 What’s inside
-
-- `install.sh` — quick install/setup script
-- `screenshots/` — demo images + video
-- `Wallpaper/` — wallpapers for this setup
-
-## 󰅐 Install
-
-```bash
-chmod +x install.sh
-./install.sh
-```
-
-## 󰸉 Included wallpapers
-
-- Noctis
-- Tux
-- Girl
-- Cyberpunk
-- Minimalistic
-- Forest
-- Abstract
-- QcqKfdZ
-- Fish
-
-## 󰒓 Make it yours
-
-Feel free to tweak it however you want:
-
-- swap wallpapers from `Wallpaper/`
-- replace screenshots with your own style
-- customize `install.sh` for your flow
-
-## 󰀼 Contributing
-
-PRs are welcome.
-
-1. Fork this repo
-2. Create your feature branch
-3. Open a pull request
-
-## 󰿃 License
-
-No license file yet — add one if you want (MIT is a good default).
+Video: [`screenshots/preview.mp4`](screenshots/preview.mp4)
