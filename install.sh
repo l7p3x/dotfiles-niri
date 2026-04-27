@@ -19,7 +19,7 @@ IFS=$'\n\t'
 # ── Resolve script root (safe against symlinks) ───────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
-# ── Colours ───────────────────────────────────────────────────────────────────
+# ── Colors ────────────────────────────────────────────────────────────────────
 C_RESET='\033[0m';    C_BOLD='\033[1m';      C_DIM='\033[2m'
 C_GREEN='\033[0;32m'; C_YELLOW='\033[0;33m'; C_BLUE='\033[0;34m'
 C_RED='\033[0;31m';   C_CYAN='\033[0;36m';   C_MAGENTA='\033[0;35m'
@@ -120,7 +120,7 @@ for arg in "$@"; do
   esac
 done
 
-# ── Dry-run wrapper ───────────────────────────────────────────────────────────
+# ── Dry-run wrapper ──────────────────────────────────────────────────────────
 run() {
   if $FLAG_DRY_RUN; then
     echo -e "${C_DIM}     [dry] $*${C_RESET}"
@@ -131,8 +131,8 @@ run() {
 }
 
 # ── Interactive confirm (respects --yes and --dry-run) ───────────────────────
-# Requer que o usuário digite "y" (ou "Y") e pressione Enter para confirmar.
-# Um único caractere sem Enter não é aceito — evita confirmações acidentais.
+# Requires the user to type "y" (or "Y") and press Enter to confirm.
+# A single character without Enter is not accepted — prevents accidental confirmations.
 confirm() {
   $FLAG_DRY_RUN && return 0
   $FLAG_YES     && return 0
@@ -315,7 +315,7 @@ cmd_bootstrap() {
     ok "Font cache rebuilt."
   fi
 
-  # ── B4: fish como shell padrão ─────────────────────────────────────────────
+  # ── B4: fish as default shell ────────────────────────────────────────────────
   section "B4 · Default shell → fish"
 
   if command -v fish &>/dev/null; then
@@ -354,7 +354,7 @@ cmd_bootstrap() {
   fi
 
   if command -v fish &>/dev/null; then
-    # Instala o fisher primeiro
+    # Install fisher first
     if ! fish -c "type -q fisher" &>/dev/null; then
       info "Installing fisher…"
       run fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
@@ -364,7 +364,7 @@ cmd_bootstrap() {
       skip "Fisher already installed."
     fi
 
-    # Instala cada plugin (falha em um não para o script)
+    # Install each plugin (failure in one does not stop the script)
     for plugin in "${FISHER_PLUGINS[@]}"; do
       [[ -z "$plugin" || "$plugin" == \#* ]] && continue
       if fish -c "fisher list 2>/dev/null | grep -qF '$plugin'"; then
@@ -395,7 +395,7 @@ cmd_bootstrap() {
     warn "xdg-user-dirs not found — skipping."
   fi
 
-  # ── B7: git configuration (opcional) ──────────────────────────────────────
+  # ── B7: git configuration (optional) ───────────────────────────────────────
   section "B7 · git configuration (optional)"
 
   local cur_name;  cur_name="$(git  config --global user.name  2>/dev/null || true)"
@@ -404,12 +404,12 @@ cmd_bootstrap() {
   if [[ -n "$cur_name" && -n "$cur_email" ]]; then
     skip "git identity already set: $cur_name <$cur_email>"
   elif $FLAG_YES; then
-    # Modo não-interativo: não bloqueia, apenas avisa
+    # Non-interactive mode: does not block, just warns
     warn "git identity not configured (optional). Set it later with:"
     warn "  git config --global user.name  'Your Name'"
     warn "  git config --global user.email 'your@email.com'"
   else
-    # Modo interativo: oferece configurar, mas deixa em branco ser válido
+    # Interactive mode: offers to configure, but leaving blank is valid
     info "git identity is not set. This is optional — press Enter to skip."
     local git_name="" git_email=""
 
@@ -525,7 +525,7 @@ cmd_rollback() {
 # =============================================================================
 run_deploy() {
 
-  # ── 0 · Repo guard ──────────────────────────────────────────────────────────
+  # ── 0 · Repo guard ────────────────────────────────────────────────────────
   section "0 · Repo check"
   if [[ ! -d "$SCRIPT_DIR/.config" ]]; then
     err "SCRIPT_DIR/.config not found. Run from the dotfiles repo root."
@@ -533,7 +533,7 @@ run_deploy() {
   fi
   ok "Repo valid: $SCRIPT_DIR"
 
-  # ── 1 · Environment ─────────────────────────────────────────────────────────
+  # ── 1 · Environment ───────────────────────────────────────────────────────
   section "1 · Environment"
   local OS_ID=""; [[ -f /etc/os-release ]] && OS_ID="$(. /etc/os-release && echo "$ID")"
   _detect_pkg_manager
@@ -548,11 +548,11 @@ run_deploy() {
 
   if [[ "$OS_ID" != "arch" && "$OS_ID" != "manjaro" && \
         "$OS_ID" != "endeavouros" && "$OS_ID" != "cachyos" ]]; then
-    warn "Distro '$OS_ID' não é Arch-based — package install desativado."
+    warn "Distro '$OS_ID' is not Arch-based — package install disabled."
     FLAG_INSTALL_PKGS=false
   fi
 
-  # ── 2 · Directories ─────────────────────────────────────────────────────────
+  # ── 2 · Directories ───────────────────────────────────────────────────────
   section "2 · Directories"
   local DIRS=(
     "$HOME/.config"
@@ -569,7 +569,7 @@ run_deploy() {
     [[ -d "$d" ]] && skip "$d" || { run mkdir -p "$d"; ok "Created: $d"; }
   done
 
-  # ── 3 · Packages ────────────────────────────────────────────────────────────
+  # ── 3 · Packages ──────────────────────────────────────────────────────────
   section "3 · Packages"
   if $FLAG_INSTALL_PKGS; then
     [[ "$PKG_MANAGER" == "none" ]] && { err "No package manager. Run bootstrap first."; } || \
@@ -587,7 +587,7 @@ run_deploy() {
     warn "Skipping packages (--install-packages not set)"
   fi
 
-  # ── 4 · Configs ─────────────────────────────────────────────────────────────
+  # ── 4 · Configs ───────────────────────────────────────────────────────────
   section "4 · Configs"
   local base_cfg="$SCRIPT_DIR/.config"
   local profile_cfg="$SCRIPT_DIR/profiles/$PROFILE/.config"
@@ -603,13 +603,13 @@ run_deploy() {
     [[ -d "$src" ]] && deploy_entry "$src" "$HOME/.config/$app"
   done
 
-  # ── 4b · fish (merge cirúrgico — nunca substituir o dir inteiro) ────────────
-  # Estrutura do repo:  .config/fish/config.fish
-  #                     .config/fish/conf.d/done.fish
+  # ── 4b · fish (surgical merge — never replace entire directory) ────────────
+  # Repo structure:  .config/fish/config.fish
+  #                  .config/fish/conf.d/done.fish
   #
-  # ~/.config/fish contém arquivos de runtime gerados pelo fish (fish_variables,
-  # fish_history, fish_plugins) que jamais devem ser sobrescritos ou linkados.
-  # Fazemos merge arquivo a arquivo, preservando o que o fish gerencia sozinho.
+  # ~/.config/fish contains runtime files generated by fish (fish_variables,
+  # fish_history, fish_plugins) that should never be overwritten or linked.
+  # We do file-by-file merge, preserving what fish manages on its own.
   section "4b · fish config (merge)"
   local fish_src="$base_cfg/fish"
   [[ -d "$profile_cfg/fish" ]] && fish_src="$profile_cfg/fish" && info "Profile overlay: fish"
@@ -618,12 +618,12 @@ run_deploy() {
     run mkdir -p "$fish_dst"
     run mkdir -p "$fish_dst/conf.d"
 
-    # Deploy config.fish diretamente (único arquivo no topo do dir)
+    # Deploy config.fish directly (single file at top level)
     if [[ -f "$fish_src/config.fish" ]]; then
       deploy_entry "$fish_src/config.fish" "$fish_dst/config.fish"
     fi
 
-    # Deploy de cada arquivo em conf.d individualmente
+    # Deploy each file in conf.d individually
     if [[ -d "$fish_src/conf.d" ]]; then
       for entry in "$fish_src/conf.d"/*; do
         [[ -f "$entry" ]] || continue
@@ -632,29 +632,29 @@ run_deploy() {
       done
     fi
 
-    # Injeta home.fish — garante que terminais de login abram em ~
-    # O fish herda PWD do processo pai (ex: terminal aberto no repo).
-    # is-login + is-interactive garante que só roda em sessões reais de terminal.
+    # Inject home.fish — ensures login terminals open in ~
+    # fish inherits PWD from parent process (e.g., terminal opened in repo).
+    # is-login + is-interactive ensures it only runs in real terminal sessions.
     local fpath_home="$fish_dst/conf.d/home.fish"
     if [[ ! -f "$fpath_home" ]] || $FLAG_FORCE; then
       $FLAG_DRY_RUN || cat > "$fpath_home" << 'HOMEFISH'
 # Added by dotfiles installer
-# Garante que terminais interativos de login sempre abram em ~
+# Ensures interactive login terminals always open in ~
 if status is-interactive && status is-login
     cd $HOME
 end
 HOMEFISH
-      ok "fish conf.d/home.fish escrito — terminais abrirão em ~"
+      ok "fish conf.d/home.fish written — terminals will open in ~"
     else
       skip "fish conf.d/home.fish (unchanged)"
     fi
 
     ok "fish config merged → $fish_dst"
   else
-    skip "Nenhum config fish no repo."
+    skip "No fish config in repo."
   fi
 
-  # ── 4a · .gtkrc-2.0 (home root) ─────────────────────────────────────────────
+  # ── 4a · .gtkrc-2.0 (home root) ────────────────────────────────────────────
   section "4a · GTK-2 config"
   local gtkrc2_src="$SCRIPT_DIR/.gtkrc-2.0"
   if [[ -f "$gtkrc2_src" ]]; then
@@ -663,7 +663,7 @@ HOMEFISH
     skip ".gtkrc-2.0 not found in repo."
   fi
 
-  # ── 5 · Wallpapers ──────────────────────────────────────────────────────────
+  # ── 5 · Wallpapers ────────────────────────────────────────────────────────
   section "5 · Wallpapers"
   local WALL_SRC="$SCRIPT_DIR/Wallpaper"
   local WALL_DST="$HOME/Pictures/Wallpaper"
@@ -672,10 +672,10 @@ HOMEFISH
     run mkdir -p "$WALL_DST"
 
     if command -v rsync &>/dev/null; then
-      # --exclude current.png para não copiar o symlink hardcoded do repo
+      # --exclude current.png to not copy the hardcoded symlink from repo
       run rsync -rlpt --exclude='current.png' "$WALL_SRC/" "$WALL_DST/"
     else
-      # copia todos exceto symlinks (current.png)
+      # copy all except symlinks (current.png)
       find "$WALL_SRC" -maxdepth 1 -type f | while read -r wfile; do
         run cp "$wfile" "$WALL_DST/"
       done
@@ -683,35 +683,35 @@ HOMEFISH
 
     run chmod -R u+rw,go+r "$WALL_DST"
 
-    # Escolhe um wallpaper aleatório e cria o symlink current.png
+    # Pick a random wallpaper and create current.png symlink
     local first_wall; first_wall="$(find "$WALL_DST" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | shuf | head -n1)"
     local current_link="$HOME/.local/share/wallpaper/current.png"
     if [[ -n "$first_wall" ]]; then
       run ln -sf "$first_wall" "$current_link"
 
-      # Aplica o wallpaper imediatamente via awww se estiver rodando
+      # Apply wallpaper immediately via awww if running
       if command -v awww &>/dev/null; then
         if awww query &>/dev/null 2>&1; then
           run awww img "$current_link" --transition-type fade --transition-duration 1
-          ok "awww: wallpaper aplicado ao vivo ✨"
+          ok "awww: wallpaper applied live ✨"
         else
-          skip "awww instalado mas daemon não está rodando — wallpaper será aplicado no próximo login."
+          skip "awww installed but daemon not running — wallpaper will be applied on next login."
         fi
       else
-        skip "awww não encontrado — wallpaper será aplicado no próximo login."
+        skip "awww not found — wallpaper will be applied on next login."
       fi
 
-      # Exibe o nome do wallpaper escolhido de forma amigável
+      # Display chosen wallpaper name in friendly way
       local wall_name; wall_name="$(basename "$first_wall")"
       ok "Wallpaper → $wall_name 🖼"
 
-      # Conta quantos wallpapers estão disponíveis no total
+      # Count how many wallpapers available in total
       local wall_count; wall_count="$(find "$WALL_DST" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | wc -l)"
-      info "$(printf '%d wallpaper(s) disponível(is) em %s' "$wall_count" "$WALL_DST")"
+      info "$(printf '%d wallpaper(s) available in %s' "$wall_count" "$WALL_DST")"
 
       state::set "wallpaper.current" "$first_wall"
     else
-      warn "Nenhum wallpaper (.png/.jpg) encontrado em $WALL_DST."
+      warn "No wallpapers (.png/.jpg) found in $WALL_DST."
     fi
 
     ok "Wallpapers synced → $WALL_DST"
@@ -719,7 +719,7 @@ HOMEFISH
     warn "No Wallpaper/ directory in repo — skipping."
   fi
 
-  # ── 6 · Scripts → ~/.local/bin ──────────────────────────────────────────────
+  # ── 6 · Scripts → ~/.local/bin ────────────────────────────────────────────
   section "6 · Scripts"
   local BIN_SRC="$SCRIPT_DIR/.local/bin"
   if [[ -d "$BIN_SRC" ]]; then
@@ -767,7 +767,7 @@ HOMEFISH
     skip "No .local/share/applications/ in repo."
   fi
 
-  # ── 6b · Fish configs & plugins ─────────────────────────────────────────────
+  # ── 6b · Fish configs & plugins ────────────────────────────────────────────
   section "6b · Fish configs & plugins"
   if command -v fish &>/dev/null; then
     local fish_conf_dir="$HOME/.config/fish/conf.d"
@@ -798,9 +798,9 @@ HOMEFISH
       skip "fish XDG conf (unchanged)"
     fi
 
-    # Fisher: instala se não estiver presente, depois atualiza
+    # Fisher: install if not present, then update
     if ! fish -c "type -q fisher" &>/dev/null; then
-      info "Fisher não encontrado — instalando..."
+      info "Fisher not found — installing..."
       if ! $FLAG_DRY_RUN; then
         fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher" \
           && ok "Fisher installed." \
@@ -810,7 +810,7 @@ HOMEFISH
       skip "Fisher already installed."
     fi
 
-    # fisher update — só executa se existir fish_plugins com conteúdo
+    # fisher update — only runs if fish_plugins exists with content
     local fish_plugins="$HOME/.config/fish/fish_plugins"
     if [[ -f "$fish_plugins" ]] && [[ -s "$fish_plugins" ]]; then
       info "Running fisher update..."
@@ -829,12 +829,12 @@ HOMEFISH
     skip "fish not installed — skipping configs."
   fi
 
-  # ── 6c · Fish como shell padrão ──────────────────────────────────────────
+  # ── 6c · fish as default shell ────────────────────────────────────────────
   section "6c · Default shell → fish"
   if command -v fish &>/dev/null; then
     local fish_bin; fish_bin="$(command -v fish)"
 
-    # Garante que fish está em /etc/shells
+    # Ensure fish is in /etc/shells
     if ! grep -qF "$fish_bin" /etc/shells 2>/dev/null; then
       info "Adding fish to /etc/shells…"
       run bash -c "echo '$fish_bin' | sudo tee -a /etc/shells > /dev/null"
@@ -852,7 +852,7 @@ HOMEFISH
     warn "fish not found — skipping shell change."
   fi
 
-  # ── 7a · Ícones locais ────────────────────────────────────────────────────
+  # ── 7a · Local icons ───────────────────────────────────────────────────────
   section "7a · Local icons"
   local ICONS_SRC="$SCRIPT_DIR/.local/share/icons"
   if [[ -d "$ICONS_SRC" ]]; then
@@ -870,7 +870,7 @@ HOMEFISH
   if [[ -d "$NWGLOOK_SRC" ]]; then
     local nwglook_dst="$HOME/.local/share/nwg-look"
     run mkdir -p "$nwglook_dst"
-    # usa rsync ou cp -r (sobrescreve, para evitar estado inconsistente)
+    # use rsync or cp -r (overwrite to avoid inconsistent state)
     if command -v rsync &>/dev/null; then
       run rsync -rlpt "$NWGLOOK_SRC/" "$nwglook_dst/"
     else
@@ -928,9 +928,9 @@ MIME
 
   # ── 10 · Themes (Gruvbox + Qogir cursor) ────────────────────────────────────
   section "10 · Themes"
-  # Temas são instalados via pacote (gruvbox-dark-gtk, gruvbox-dark-icons-gtk,
-  # qogir-cursor-theme). Aqui apenas aplicamos via gsettings e xsettingsd.
-  # Se a pasta themes/ existir no repo, copia para ~/.local/share/themes/ também.
+  # Themes are installed via package (gruvbox-dark-gtk, gruvbox-dark-icons-gtk,
+  # qogir-cursor-theme). Here we only apply via gsettings and xsettingsd.
+  # If themes/ folder exists in repo, also copy to ~/.local/share/themes/.
   local THEME_SRC="$SCRIPT_DIR/themes"
   if [[ -d "$THEME_SRC/icons" ]]; then
     run cp -rn "$THEME_SRC/icons/." "$HOME/.local/share/icons/" 2>/dev/null || true
@@ -940,20 +940,20 @@ MIME
     run cp -rn "$THEME_SRC/gtk/." "$HOME/.local/share/themes/" 2>/dev/null || true
   fi
 
-  # Detecta nomes reais dos temas instalados (independente de pacman/gsettings)
+  # Detect actual theme names (independent of pacman/gsettings)
   local gtk_theme="Gruvbox-Dark"
-  local detected; detected="$(find /usr/share/themes "$HOME/.local/share/themes"     -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
+  local detected; detected="$(find /usr/share/themes "$HOME/.local/share/themes" -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
   [[ -n "$detected" ]] && gtk_theme="$detected"
 
   local icon_theme="gruvbox-dark-icons-gtk"
-  local det_icon; det_icon="$(find /usr/share/icons "$HOME/.local/share/icons"     -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
+  local det_icon; det_icon="$(find /usr/share/icons "$HOME/.local/share/icons" -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
   [[ -n "$det_icon" ]] && icon_theme="$det_icon"
 
   local cursor_theme="Qogir-white-cursors"
-  find /usr/share/icons "$HOME/.local/share/icons"     -maxdepth 1 -type d -name 'Qogir-white-cursors' 2>/dev/null | grep -q . || cursor_theme="Qogir"
+  find /usr/share/icons "$HOME/.local/share/icons" -maxdepth 1 -type d -name 'Qogir-white-cursors' 2>/dev/null | grep -q . || cursor_theme="Qogir"
 
-  # ── gsettings (dconf) ────────────────────────────────────────────────────────
-  # Tenta aplicar via dconf. Pode falhar fora de sessão gráfica — não é bloqueante.
+  # ── gsettings (dconf) ───────────────────────────────────────────────────────
+  # Try to apply via dconf. May fail outside graphical session — not blocking.
   if command -v gsettings &>/dev/null; then
     if gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme" 2>/dev/null; then
       gsettings set org.gnome.desktop.wm.preferences theme "$gtk_theme" 2>/dev/null || true
@@ -962,49 +962,49 @@ MIME
       gsettings set org.gnome.desktop.interface cursor-size 21 2>/dev/null || true
       ok "gsettings: GTK=$gtk_theme | Icons=$icon_theme | Cursor=$cursor_theme (21px)"
     else
-      warn "gsettings falhou (DBUS indisponível?) — aplicando via arquivos de config."
+      warn "gsettings failed (DBUS unavailable?) — applying via config files."
     fi
   fi
 
   # ── gtk-3.0/settings.ini ────────────────────────────────────────────────────
-  # Garante que GTK3 leia o tema correto mesmo sem dconf
+  # Ensures GTK3 reads theme correctly even without dconf
   local gtk3_settings="$HOME/.config/gtk-3.0/settings.ini"
   if [[ -f "$gtk3_settings" ]]; then
-    run sed -i       -e "s|^gtk-theme-name=.*|gtk-theme-name=$gtk_theme|"       -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=$icon_theme|"       -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=$cursor_theme|"       -e "s|^gtk-cursor-theme-size=.*|gtk-cursor-theme-size=21|"       "$gtk3_settings"
-    ok "gtk-3.0/settings.ini atualizado."
+    run sed -i -e "s|^gtk-theme-name=.*|gtk-theme-name=$gtk_theme|" -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=$icon_theme|" -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=$cursor_theme|" "$gtk3_settings"
+    ok "gtk-3.0/settings.ini updated."
   fi
 
   # ── gtk-4.0/settings.ini ────────────────────────────────────────────────────
   local gtk4_settings="$HOME/.config/gtk-4.0/settings.ini"
   if [[ -f "$gtk4_settings" ]]; then
-    run sed -i       -e "s|^gtk-theme-name=.*|gtk-theme-name=$gtk_theme|"       -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=$icon_theme|"       -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=$cursor_theme|"       -e "s|^gtk-cursor-theme-size=.*|gtk-cursor-theme-size=21|"       "$gtk4_settings"
-    ok "gtk-4.0/settings.ini atualizado."
+    run sed -i -e "s|^gtk-theme-name=.*|gtk-theme-name=$gtk_theme|" -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=$icon_theme|" -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=$cursor_theme|" "$gtk4_settings"
+    ok "gtk-4.0/settings.ini updated."
   fi
 
-  # ── xsettingsd.conf ──────────────────────────────────────────────────────────
-  # xsettingsd propaga temas para apps X11/XWayland no Niri.
-  # Atualizamos os valores no arquivo já deployado e recarregamos o daemon.
+  # ── xsettingsd.conf ────────────────────────��───────────────────────────────
+  # xsettingsd propagates themes to X11/XWayland apps in Niri.
+  # Update values in already deployed file and reload daemon.
   local xset_conf="$HOME/.config/xsettingsd/xsettingsd.conf"
   if [[ -f "$xset_conf" ]]; then
-    run sed -i       -e "s|^Net/ThemeName .*|Net/ThemeName \"$gtk_theme\"|"       -e "s|^Net/IconThemeName .*|Net/IconThemeName \"$icon_theme\"|"       -e "s|^Gtk/CursorThemeName .*|Gtk/CursorThemeName \"$cursor_theme\"|"       -e "s|^Gtk/CursorThemeSize .*|Gtk/CursorThemeSize 21|"       "$xset_conf"
-    ok "xsettingsd.conf atualizado."
+    run sed -i -e "s|^Net/ThemeName .*|Net/ThemeName \"$gtk_theme\"|" -e "s|^Net/IconThemeName .*|Net/IconThemeName \"$icon_theme\"|" -e "s|^Gtk/CursorThemeName .*|Gtk/CursorThemeName \"$cursor_theme\"|" "$xset_conf"
+    ok "xsettingsd.conf updated."
     if pkill -HUP xsettingsd 2>/dev/null; then
-      ok "xsettingsd recarregado — cursor/icons aplicados ao vivo."
+      ok "xsettingsd reloaded — cursor/icons applied live."
     else
-      skip "xsettingsd não está rodando — será aplicado no próximo login."
+      skip "xsettingsd not running — will be applied on next login."
     fi
   fi
 
-  # ── .gtkrc-2.0 ───────────────────────────────────────────────────────────────
+  # ── .gtkrc-2.0 ─────────────────────────────────────────────────────────────
   local gtkrc2="$HOME/.gtkrc-2.0"
   if [[ -f "$gtkrc2" ]]; then
-    run sed -i       -e "s|^gtk-theme-name=.*|gtk-theme-name=\"$gtk_theme\"|"       -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=\"$icon_theme\"|"       -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=\"$cursor_theme\"|"       -e "s|^gtk-cursor-theme-size=.*|gtk-cursor-theme-size=21|"       "$gtkrc2"
-    ok ".gtkrc-2.0 atualizado."
+    run sed -i -e "s|^gtk-theme-name=.*|gtk-theme-name=\"$gtk_theme\"|" -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=\"$icon_theme\"|" -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=\"$cursor_theme\"|" "$gtkrc2"
+    ok ".gtkrc-2.0 updated."
   fi
 
-  # ── Xcursor default ──────────────────────────────────────────────────────────
-  # Cria ~/.local/share/icons/default/index.theme — lido pelo Xorg/XWayland
-  # para definir o cursor mesmo quando xsettingsd não está rodando ainda.
+  # ── Xcursor default ────────────────────────────────────────────────────────
+  # Create ~/.local/share/icons/default/index.theme — read by Xorg/XWayland
+  # to set cursor even when xsettingsd not yet running.
   local xcursor_dst="$HOME/.local/share/icons/default"
   run mkdir -p "$xcursor_dst"
   $FLAG_DRY_RUN || cat > "$xcursor_dst/index.theme" <<XCURSOR
@@ -1015,9 +1015,9 @@ Inherits=$cursor_theme
 XCURSOR
   ok "Xcursor default → $cursor_theme"
 
-  state::log "THEMES applied: GTK=$gtk_theme ICONS=$icon_theme CURSOR=$cursor_theme size=21"  
+  state::log "THEMES applied: GTK=$gtk_theme ICONS=$icon_theme CURSOR=$cursor_theme size=21"
 
-  # ── 10a · Fontes locais ───────────────────────────────────────────────────
+  # ── 10a · Local fonts ──────────────────────────────────────────────────────
   section "10a · Local fonts"
   local FONTS_SRC="$SCRIPT_DIR/.local/share/fonts"
   if [[ -d "$FONTS_SRC" ]]; then
@@ -1035,9 +1035,9 @@ XCURSOR
     skip "No .local/share/fonts/ in repo."
   fi
 
-  # ── 11 · Weather widget ───────────────────────────────────────────────────
+  # ── 11 · Weather widget ────────────────────────────────────────────────────
   section "11 · Weather widget"
-  # O script está em assets/ (não em scripts/)
+  # Script is in assets/ (not scripts/)
   local weather_script="$HOME/.config/waybar/assets/weather.py"
 
   if [[ -f "$weather_script" ]]; then
@@ -1058,16 +1058,16 @@ XCURSOR
     skip "weather.py not found in waybar/assets/."
   fi
 
-  # ── 12 · Validation ───────────────────────────────────────────────────────
+  # ── 12 · Validation ────────────────────────────────────────────────────────
   check_required_bins
 
-  # ── Persist state ─────────────────────────────────────────────────────────
-  # Garante que o symlink de wallpaper (que aponta para path local do usuário)
-  # nunca é versionado por acidente
+  # ── Persist state ──────────────────────────────────────────────────────────
+  # Ensure wallpaper symlink (pointing to user's local path) is never
+  # accidentally versioned
   local gitignore="$SCRIPT_DIR/.gitignore"
   if [[ -f "$gitignore" ]] && ! grep -qF ".local/share/wallpaper" "$gitignore"; then
     echo ".local/share/wallpaper/" >> "$gitignore"
-    ok ".gitignore: protegido .local/share/wallpaper/"
+    ok ".gitignore: protected .local/share/wallpaper/"
   fi
 
   state::set "profile.current" "$PROFILE"
@@ -1129,10 +1129,10 @@ cmd_auto() {
 
   confirm "Proceed with full setup?" || { info "Aborted."; exit 0; }
 
-  # Bootstrap (skip se já feito) — erros não-críticos não param o install
-  cmd_bootstrap || warn "Bootstrap terminou com avisos — continuando com install..."
+  # Bootstrap (skip if already done) — non-critical errors don't stop install
+  cmd_bootstrap || warn "Bootstrap completed with warnings — continuing with install..."
 
-  # Install com packages
+  # Install with packages
   FLAG_INSTALL_PKGS=true
   cmd_install
 }
