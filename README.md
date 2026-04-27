@@ -1,6 +1,18 @@
 # dotfile-niri
 
-This is my main Niri dots repo. It contains user configs for Wayland apps and an install script that can bootstrap and deploy everything.
+A minimal, reproducible **Niri (Wayland) desktop setup** focused on performance, simplicity, and clean UX.
+
+This repository provides:
+- A complete Wayland environment (Niri + Waybar + Fuzzel + Mako)
+- A modular install script with bootstrap, update, and rollback support
+- Optional symlink-based deployment for easy maintenance
+- A clean and lightweight workflow optimized for low-resource systems
+
+Designed to be:
+- fast
+- minimal
+- reproducible
+- easy to understand and modify
 
 ## Installation
 
