@@ -638,6 +638,18 @@ run_deploy() {
     if [[ -n "$first_wall" ]]; then
       run ln -sf "$first_wall" "$current_link"
 
+      # Aplica o wallpaper imediatamente via awww se estiver rodando
+      if command -v awww &>/dev/null; then
+        if awww query &>/dev/null 2>&1; then
+          run awww img "$current_link" --transition-type fade --transition-duration 1
+          ok "awww: wallpaper aplicado ao vivo ✨"
+        else
+          skip "awww instalado mas daemon não está rodando — wallpaper será aplicado no próximo login."
+        fi
+      else
+        skip "awww não encontrado — wallpaper será aplicado no próximo login."
+      fi
+
       # Exibe o nome do wallpaper escolhido de forma amigável
       local wall_name; wall_name="$(basename "$first_wall")"
       ok "Wallpaper → $wall_name 🖼"
@@ -908,7 +920,8 @@ MIME
       cursor_theme="Qogir"
     fi
     run gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" 2>/dev/null || true
-    ok "Cursor theme → $cursor_theme"
+    run gsettings set org.gnome.desktop.interface cursor-size 21 2>/dev/null || true
+    ok "Cursor theme → $cursor_theme (size: 21)"
 
     state::log "THEMES applied: GTK=$gtk_theme ICONS=$icon_theme CURSOR=$cursor_theme"
   else
