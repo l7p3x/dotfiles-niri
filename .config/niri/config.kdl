@@ -243,6 +243,7 @@ layout {
 // Esta linha inicia o waybar, uma barra comumente usada para compositores Wayland.
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "awww-daemon"
+spawn-at-startup "waybar"
 
 environment {
     DISPLAY ":0"
@@ -257,7 +258,7 @@ spawn-sh-at-startup "~/.config/niri/swayidle"
 
 hotkey-overlay {
     // Descomente esta linha para desativar o pop-up "Atalhos Importantes" na inicialização.
-    skip-at-startup
+    // skip-at-startup
 }
 
 // Descomente esta linha para pedir aos clientes que omitam suas decorações do lado do cliente, se possível.

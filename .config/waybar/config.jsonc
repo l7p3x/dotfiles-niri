@@ -86,10 +86,10 @@
 
   "custom/weather": {
     "format": {},
-    "exec": "~/.config/waybar/assets/venv/bin/python3 ~/.config/waybar/assets/weather.py",
+    "exec": "python3 ~/.config/waybar/assets/weather.py",
     "restart-interval": 300,
     "return-type": "json",
-    "on-click": "xdg-open https://weather.com/en-IN/weather/today/l/b50807551834e3f0925a5f7edaa00ed902aaf1e3b4313b9b031cb3a189dfb1db",
+    "on-click": "xdg-open https://wttr.in",
   },
 
   "custom/volume": {

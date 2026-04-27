@@ -1,45 +1,117 @@
 #!/usr/bin/env python3
+"""
+Waybar weather widget
+  · Zero external dependencies  (só stdlib)
+  · Localização detectada automaticamente por IP na 1ª execução (cacheada)
+  · Para forçar nova cidade: rm ~/.cache/waybar_weather_location
+  · Unidade: variável WAYBAR_WEATHER_UNIT=C (padrão) ou F
+"""
 
 import json
+import os
+import urllib.parse
+import urllib.request
 
-from pyquery import PyQuery  # install using `pip install pyquery`
+# ── Configuração ──────────────────────────────────────────────────────────────
+LOCATION_CACHE = os.path.expanduser("~/.cache/waybar_weather_location")
+UNIT = os.environ.get("WAYBAR_WEATHER_UNIT", "C").upper()  # "C" ou "F"
+TIMEOUT = 10
 
-################################### CONFIGURATION ###################################
-location_id = "b50807551834e3f0925a5f7edaa00ed902aaf1e3b4313b9b031cb3a189dfb1db"
 
-# celcius or fahrenheit
-unit = "metric"  # metric or imperial
+def _get(url: str) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "waybar-weather/2.0"})
+    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        return r.read()
 
-# forcase type
-forecast_type = "Hourly"  # Hourly or Daily
 
-########################################## MAIN ##################################
+def get_location() -> str:
+    """Retorna cidade cacheada ou detecta via ipinfo.io."""
+    if os.path.exists(LOCATION_CACHE):
+        loc = open(LOCATION_CACHE).read().strip()
+        if loc:
+            return loc
 
-# get html page
-_l = "en-IN" if unit == "metric" else "en-US"
-url = f"https://weather.com/{_l}/weather/today/l/{location_id}"
+    try:
+        data = json.loads(_get("https://ipinfo.io/json"))
+        city = data.get("city") or data.get("region") or ""
+        if city:
+            os.makedirs(os.path.dirname(LOCATION_CACHE), exist_ok=True)
+            open(LOCATION_CACHE, "w").write(city)
+            return city
+    except Exception:
+        pass
 
-# get html data
-html_data = PyQuery(url=url)
+    return "auto"  # wttr.in resolve automaticamente por IP como fallback
 
-# current temperature
-temp = html_data("span[data-testid='TemperatureValue']").eq(0).text()
 
-# min-max temperature
-temp_min = (
-    html_data("div[data-testid='wxData'] > span[data-testid='TemperatureValue']")
-    .eq(1)
-    .text()
-)
-temp_max = (
-    html_data("div[data-testid='wxData'] > span[data-testid='TemperatureValue']")
-    .eq(0)
-    .text()
-)
+def fetch_weather(location: str) -> dict:
+    url = f"https://wttr.in/{urllib.parse.quote(location)}?format=j1"
+    return json.loads(_get(url))
 
-out_data = {
-    "text": f"  {temp}C",
-    "tooltip": f"Min: {temp_min}C\nMax: {temp_max}C",
-}
-print(json.dumps(out_data))
 
+def main() -> None:
+    location = get_location()
+
+    try:
+        data = fetch_weather(location)
+    except Exception as exc:
+        print(
+            json.dumps({"text": "⚠️ N/A", "tooltip": str(exc), "class": "weather-error"})
+        )
+        return
+
+    cur = data["current_condition"][0]
+    today = data["weather"][0]
+    code = int(cur["weatherCode"])
+    icon = ""
+
+    if UNIT == "F":
+        temp, feels = cur["temp_F"], cur["FeelsLikeF"]
+        hi, lo = today["maxtempF"], today["mintempF"]
+        sym = "°F"
+    else:
+        temp, feels = cur["temp_C"], cur["FeelsLikeC"]
+        hi, lo = today["maxtempC"], today["mintempC"]
+        sym = "°C"
+
+    desc = cur["weatherDesc"][0]["value"]
+    humidity = cur["humidity"]
+    wind_kmh = cur["windspeedKmph"]
+
+    # Previsão dos próximos 2 dias
+    forecast_lines = []
+    days_pt = ["Amanhã", "Depois de amanhã"]
+    for i, label in enumerate(days_pt):
+        if i + 1 < len(data["weather"]):
+            d = data["weather"][i + 1]
+            d_hi = d["maxtempC"] if UNIT != "F" else d["maxtempF"]
+            d_lo = d["mintempC"] if UNIT != "F" else d["mintempF"]
+            d_desc = d["hourly"][4]["weatherDesc"][0]["value"]  # ≈ meio-dia
+            forecast_lines.append(f"{label}: {d_desc} {d_lo}{sym}–{d_hi}{sym}")
+
+    tooltip = (
+        f"{icon} {desc}\n"
+        f"━━━━━━━━━━━━━━━━━━━\n"
+        f"Atual:      {temp}{sym}\n"
+        f"Sensação:   {feels}{sym}\n"
+        f"Min / Max:  {lo}{sym} / {hi}{sym}\n"
+        f"Umidade:    {humidity}%\n"
+        f"Vento:      {wind_kmh} km/h\n"
+        f"📍 {location}\n"
+    )
+    if forecast_lines:
+        tooltip += "━━━━━━━━━━━━━━━━━━━\n" + "\n".join(forecast_lines)
+
+    print(
+        json.dumps(
+            {
+                "text": f"{icon} {temp}{sym}",
+                "tooltip": tooltip,
+                "class": "weather",
+            }
+        )
+    )
+
+
+if __name__ == "__main__":
+    main()
