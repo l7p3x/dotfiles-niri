@@ -592,7 +592,7 @@ run_deploy() {
   local base_cfg="$SCRIPT_DIR/.config"
   local profile_cfg="$SCRIPT_DIR/profiles/$PROFILE/.config"
   local -a CONFIG_APPS=(
-    alacritty fish waybar fuzzel mako niri
+    alacritty waybar fuzzel mako niri
     btop fastfetch cava micro
     gtk-3.0 gtk-4.0 swaylock nwg-look Thunar xsettingsd mpv
   )
@@ -602,6 +602,31 @@ run_deploy() {
     [[ -d "$profile_cfg/$app" ]] && src="$profile_cfg/$app" && info "Profile overlay: $app"
     [[ -d "$src" ]] && deploy_entry "$src" "$HOME/.config/$app"
   done
+
+  # ── 4b · fish (merge — nunca substituir o dir inteiro) ───────────────────────
+  # ~/.config/fish contém arquivos gerados em runtime (fish_variables, histórico,
+  # fish_plugins) que NÃO devem ser apagados nem linkados para o repo.
+  # Copiamos/linkamos apenas os arquivos que existem no repo, dentro do dir existente.
+  section "4b · fish config (merge)"
+  local fish_src="$base_cfg/fish"
+  [[ -d "$profile_cfg/fish" ]] && fish_src="$profile_cfg/fish" && info "Profile overlay: fish"
+  if [[ -d "$fish_src" ]]; then
+    local fish_dst="$HOME/.config/fish"
+    run mkdir -p "$fish_dst"
+    # Itera sobre cada item no topo do diretório fish do repo
+    for entry in "$fish_src"/*; do
+      [[ -e "$entry" ]] || continue
+      local ename; ename="$(basename "$entry")"
+      # Nunca tocar em arquivos gerados pelo fish em runtime
+      case "$ename" in
+        fish_variables|fish_history|fish_plugins) skip "fish runtime file: $ename"; continue ;;
+      esac
+      deploy_entry "$entry" "$fish_dst/$ename"
+    done
+    ok "fish config merged → $fish_dst"
+  else
+    skip "Nenhum config fish no repo."
+  fi
 
   # ── 4a · .gtkrc-2.0 (home root) ─────────────────────────────────────────────
   section "4a · GTK-2 config"
