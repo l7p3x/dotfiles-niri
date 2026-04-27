@@ -603,26 +603,52 @@ run_deploy() {
     [[ -d "$src" ]] && deploy_entry "$src" "$HOME/.config/$app"
   done
 
-  # ── 4b · fish (merge — nunca substituir o dir inteiro) ───────────────────────
-  # ~/.config/fish contém arquivos gerados em runtime (fish_variables, histórico,
-  # fish_plugins) que NÃO devem ser apagados nem linkados para o repo.
-  # Copiamos/linkamos apenas os arquivos que existem no repo, dentro do dir existente.
+  # ── 4b · fish (merge cirúrgico — nunca substituir o dir inteiro) ────────────
+  # Estrutura do repo:  .config/fish/config.fish
+  #                     .config/fish/conf.d/done.fish
+  #
+  # ~/.config/fish contém arquivos de runtime gerados pelo fish (fish_variables,
+  # fish_history, fish_plugins) que jamais devem ser sobrescritos ou linkados.
+  # Fazemos merge arquivo a arquivo, preservando o que o fish gerencia sozinho.
   section "4b · fish config (merge)"
   local fish_src="$base_cfg/fish"
   [[ -d "$profile_cfg/fish" ]] && fish_src="$profile_cfg/fish" && info "Profile overlay: fish"
   if [[ -d "$fish_src" ]]; then
     local fish_dst="$HOME/.config/fish"
     run mkdir -p "$fish_dst"
-    # Itera sobre cada item no topo do diretório fish do repo
-    for entry in "$fish_src"/*; do
-      [[ -e "$entry" ]] || continue
-      local ename; ename="$(basename "$entry")"
-      # Nunca tocar em arquivos gerados pelo fish em runtime
-      case "$ename" in
-        fish_variables|fish_history|fish_plugins) skip "fish runtime file: $ename"; continue ;;
-      esac
-      deploy_entry "$entry" "$fish_dst/$ename"
-    done
+    run mkdir -p "$fish_dst/conf.d"
+
+    # Deploy config.fish diretamente (único arquivo no topo do dir)
+    if [[ -f "$fish_src/config.fish" ]]; then
+      deploy_entry "$fish_src/config.fish" "$fish_dst/config.fish"
+    fi
+
+    # Deploy de cada arquivo em conf.d individualmente
+    if [[ -d "$fish_src/conf.d" ]]; then
+      for entry in "$fish_src/conf.d"/*; do
+        [[ -f "$entry" ]] || continue
+        local ename; ename="$(basename "$entry")"
+        deploy_entry "$entry" "$fish_dst/conf.d/$ename"
+      done
+    fi
+
+    # Injeta home.fish — garante que terminais de login abram em ~
+    # O fish herda PWD do processo pai (ex: terminal aberto no repo).
+    # is-login + is-interactive garante que só roda em sessões reais de terminal.
+    local fpath_home="$fish_dst/conf.d/home.fish"
+    if [[ ! -f "$fpath_home" ]] || $FLAG_FORCE; then
+      $FLAG_DRY_RUN || cat > "$fpath_home" << 'HOMEFISH'
+# Added by dotfiles installer
+# Garante que terminais interativos de login sempre abram em ~
+if status is-interactive && status is-login
+    cd $HOME
+end
+HOMEFISH
+      ok "fish conf.d/home.fish escrito — terminais abrirão em ~"
+    else
+      skip "fish conf.d/home.fish (unchanged)"
+    fi
+
     ok "fish config merged → $fish_dst"
   else
     skip "Nenhum config fish no repo."
