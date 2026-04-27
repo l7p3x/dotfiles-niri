@@ -19,12 +19,12 @@ IFS=$'\n\t'
 # ── Resolve script root (safe against symlinks) ───────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
-# ── Colours ─────────────────────────────────────────────────────────────[...]
+# ── Colours ───────────────────────────────────────────────────────────────────
 C_RESET='\033[0m';    C_BOLD='\033[1m';      C_DIM='\033[2m'
 C_GREEN='\033[0;32m'; C_YELLOW='\033[0;33m'; C_BLUE='\033[0;34m'
 C_RED='\033[0;31m';   C_CYAN='\033[0;36m';   C_MAGENTA='\033[0;35m'
 
-# ── Logging ─────────────────────────────────────────────────────────────[...]
+# ── Logging ───────────────────────────────────────────────────────────────────
 info()    { echo -e "${C_BLUE}${C_BOLD}  =>${C_RESET} $*"; }
 ok()      { echo -e "${C_GREEN}${C_BOLD}  ✓${C_RESET}  $*"; }
 skip()    { echo -e "${C_DIM}  –  $*${C_RESET}"; }
@@ -120,7 +120,7 @@ for arg in "$@"; do
   esac
 done
 
-# ── Dry-run wrapper ──────────────────────────────────────────────────────────[...]
+# ── Dry-run wrapper ───────────────────────────────────────────────────────────
 run() {
   if $FLAG_DRY_RUN; then
     echo -e "${C_DIM}     [dry] $*${C_RESET}"
@@ -326,7 +326,7 @@ cmd_bootstrap() {
 
     local current_shell; current_shell="$(getent passwd "$USER" | cut -d: -f7)"
     if [[ "$current_shell" != "$fish_bin" ]]; then
-      run chsh -s "$fish_bin" "$USER"
+      run sudo chsh -s "$fish_bin" "$USER"
       ok "Default shell → fish (re-login required)"
       state::log "SHELL changed to fish"
     else
@@ -343,7 +343,7 @@ cmd_bootstrap() {
   local -a FISHER_PLUGINS=(
     PatrickF1/fzf.fish
     jorgebucaran/autopair.fish
-    meaningful-ooo/sponge.fish
+    meaningful-ooo/sponge
     nickeb96/puffer-fish
   )
   if [[ -f "$plugin_list" ]]; then
@@ -362,16 +362,21 @@ cmd_bootstrap() {
       skip "Fisher already installed."
     fi
 
-    # Instala cada plugin
+    # Instala cada plugin (falha em um não para o script)
     for plugin in "${FISHER_PLUGINS[@]}"; do
       [[ -z "$plugin" || "$plugin" == \#* ]] && continue
       if fish -c "fisher list 2>/dev/null | grep -qF '$plugin'"; then
         skip "Plugin: $plugin"
       else
         info "fisher install $plugin"
-        run fish -c "fisher install $plugin"
-        ok "Installed: $plugin"
-        state::log "PLUGIN $plugin installed"
+        if ! $FLAG_DRY_RUN; then
+          if fish -c "fisher install $plugin"; then
+            ok "Installed: $plugin"
+            state::log "PLUGIN $plugin installed"
+          else
+            warn "Plugin failed (skipping): $plugin"
+          fi
+        fi
       fi
     done
   else
@@ -511,7 +516,7 @@ cmd_rollback() {
 # =============================================================================
 run_deploy() {
 
-  # ── 0 · Repo guard ─────────────────────────────────────────────────────────[...]
+  # ── 0 · Repo guard ──────────────────────────────────────────────────────────
   section "0 · Repo check"
   if [[ ! -d "$SCRIPT_DIR/.config" ]]; then
     err "SCRIPT_DIR/.config not found. Run from the dotfiles repo root."
@@ -519,7 +524,7 @@ run_deploy() {
   fi
   ok "Repo valid: $SCRIPT_DIR"
 
-  # ── 1 · Environment ────────────────────────────────────────────────────────
+  # ── 1 · Environment ─────────────────────────────────────────────────────────
   section "1 · Environment"
   local OS_ID=""; [[ -f /etc/os-release ]] && OS_ID="$(. /etc/os-release && echo "$ID")"
   _detect_pkg_manager
@@ -538,7 +543,7 @@ run_deploy() {
     FLAG_INSTALL_PKGS=false
   fi
 
-  # ── 2 · Directories ────────────────────────────────────────────────────────
+  # ── 2 · Directories ─────────────────────────────────────────────────────────
   section "2 · Directories"
   local DIRS=(
     "$HOME/.config"
@@ -573,7 +578,7 @@ run_deploy() {
     warn "Skipping packages (--install-packages not set)"
   fi
 
-  # ── 4 · Configs ────────────────────────────────────────────────────────────
+  # ── 4 · Configs ─────────────────────────────────────────────────────────────
   section "4 · Configs"
   local base_cfg="$SCRIPT_DIR/.config"
   local profile_cfg="$SCRIPT_DIR/profiles/$PROFILE/.config"
@@ -589,7 +594,7 @@ run_deploy() {
     [[ -d "$src" ]] && deploy_entry "$src" "$HOME/.config/$app"
   done
 
-  # ── 4a · .gtkrc-2.0 (home root) ────────────────────────────────────────────
+  # ── 4a · .gtkrc-2.0 (home root) ─────────────────────────────────────────────
   section "4a · GTK-2 config"
   local gtkrc2_src="$SCRIPT_DIR/.gtkrc-2.0"
   if [[ -f "$gtkrc2_src" ]]; then
@@ -598,46 +603,41 @@ run_deploy() {
     skip ".gtkrc-2.0 not found in repo."
   fi
 
-  # ── 5 · Wallpapers ────────────────────────────────────────────────────────────
+  # ── 5 · Wallpapers ──────────────────────────────────────────────────────────
   section "5 · Wallpapers"
   local WALL_SRC="$SCRIPT_DIR/Wallpaper"
   local WALL_DST="$HOME/Pictures/Wallpaper"
-  local WALL_LINK="$HOME/.local/share/wallpaper/current.png"
 
   if [[ -d "$WALL_SRC" ]]; then
     run mkdir -p "$WALL_DST"
 
-    # ── Copy wallpapers to destination
     if command -v rsync &>/dev/null; then
+      # --exclude current.png para não copiar o symlink hardcoded do repo
       run rsync -rlpt --exclude='current.png' "$WALL_SRC/" "$WALL_DST/"
     else
-      find "$WALL_SRC" -maxdepth 1 -type f ! -name 'current.png' | while read -r wfile; do
+      # copia todos exceto symlinks (current.png)
+      find "$WALL_SRC" -maxdepth 1 -type f | while read -r wfile; do
         run cp "$wfile" "$WALL_DST/"
       done
     fi
 
     run chmod -R u+rw,go+r "$WALL_DST"
 
-    # ── Create symlink to first wallpaper
-    local first_wall; first_wall="$(find "$WALL_DST" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort | head -n1)"
+    # Recria o symlink current.png apontando para o usuário atual (genérico)
+    local first_wall; first_wall="$(find "$WALL_DST" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | shuf | head -n1)"
+    local current_link="$HOME/.local/share/wallpaper/current.png"
     if [[ -n "$first_wall" ]]; then
-      # Remove old symlink if exists
-      [[ -L "$WALL_LINK" ]] && run rm -f "$WALL_LINK"
-      # Create new symlink pointing to first wallpaper
-      run ln -sf "$first_wall" "$WALL_LINK"
+      run ln -sf "$first_wall" "$current_link"
       ok "Wallpaper current → $(basename "$first_wall")"
       state::set "wallpaper.current" "$first_wall"
-      state::log "WALLPAPER symlink: $WALL_LINK → $first_wall"
-    else
-      warn "No wallpaper files found in $WALL_DST"
     fi
 
-    ok "Wallpapers deployed → $WALL_DST"
+    ok "Wallpapers synced → $WALL_DST"
   else
     warn "No Wallpaper/ directory in repo — skipping."
   fi
 
-  # ── 6 · Scripts → ~/.local/bin ────────────────────────────────────────────────
+  # ── 6 · Scripts → ~/.local/bin ──────────────────────────────────────────────
   section "6 · Scripts"
   local BIN_SRC="$SCRIPT_DIR/.local/bin"
   if [[ -d "$BIN_SRC" ]]; then
@@ -685,7 +685,7 @@ run_deploy() {
     skip "No .local/share/applications/ in repo."
   fi
 
-  # ── 6b · Fish configs & plugins ────────────────────────────────────────────────
+  # ── 6b · Fish configs & plugins ─────────────────────────────────────────────
   section "6b · Fish configs & plugins"
   if command -v fish &>/dev/null; then
     local fish_conf_dir="$HOME/.config/fish/conf.d"
@@ -747,7 +747,7 @@ run_deploy() {
     skip "fish not installed — skipping configs."
   fi
 
-  # ── 6c · Fish como shell padrão ─────────────────────────────────────────────
+  # ── 6c · Fish como shell padrão ──────────────────────────────────────────
   section "6c · Default shell → fish"
   if command -v fish &>/dev/null; then
     local fish_bin; fish_bin="$(command -v fish)"
@@ -760,7 +760,7 @@ run_deploy() {
 
     local current_shell; current_shell="$(getent passwd "$USER" | cut -d: -f7)"
     if [[ "$current_shell" != "$fish_bin" ]]; then
-      run chsh -s "$fish_bin" "$USER"
+      run sudo chsh -s "$fish_bin" "$USER"
       ok "Default shell → fish (re-login required)"
       state::log "SHELL changed to fish"
     else
@@ -782,7 +782,7 @@ run_deploy() {
     skip "No .local/share/icons/ in repo."
   fi
 
-  # ── 7b · nwg-look gsettings ────────────────────────────────────────────────
+  # ── 7b · nwg-look gsettings ───────────────────────────────────────────────
   section "7b · nwg-look gsettings"
   local NWGLOOK_SRC="$SCRIPT_DIR/.local/share/nwg-look"
   if [[ -d "$NWGLOOK_SRC" ]]; then
@@ -799,7 +799,7 @@ run_deploy() {
     skip "No .local/share/nwg-look/ in repo."
   fi
 
-  # ── 8 · Systemd user services ──────────────────────────────────────────────
+  # ── 8 · Systemd user services ─────────────────────────────────────────────
   section "8 · Systemd services"
   local SVC_SRC="$SCRIPT_DIR/systemd"
   if [[ -d "$SVC_SRC" ]]; then
@@ -883,7 +883,7 @@ MIME
     ok "Icon theme → $icon_theme"
 
     # Cursor theme
-    local cursor_theme="Qogir-white-cursors"
+    local cursor_theme="Qogir"
     if pacman -Qq qogir-cursor-theme &>/dev/null 2>&1; then
       local det_cur; det_cur="$(find /usr/share/icons "$HOME/.local/share/icons" \
         -maxdepth 1 -type d -iname 'Qogir*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
@@ -898,7 +898,7 @@ MIME
     warn "Install gnome-settings-daemon or use nwg-look to apply themes manually."
   fi
 
-  # ── 10a · Fontes locais ────────────────────────────────────────────────────
+  # ── 10a · Fontes locais ───────────────────────────────────────────────────
   section "10a · Local fonts"
   local FONTS_SRC="$SCRIPT_DIR/.local/share/fonts"
   if [[ -d "$FONTS_SRC" ]]; then
@@ -916,7 +916,7 @@ MIME
     skip "No .local/share/fonts/ in repo."
   fi
 
-  # ── 11 · Weather widget ────────────────────────────────────────────────────
+  # ── 11 · Weather widget ───────────────────────────────────────────────────
   section "11 · Weather widget"
   # O script está em assets/ (não em scripts/)
   local weather_script="$HOME/.config/waybar/assets/weather.py"
@@ -939,10 +939,10 @@ MIME
     skip "weather.py not found in waybar/assets/."
   fi
 
-  # ── 12 · Validation ────────────────────────────────────────────────────────
+  # ── 12 · Validation ───────────────────────────────────────────────────────
   check_required_bins
 
-  # ── Persist state ──────────────────────────────────────────────────────────
+  # ── Persist state ─────────────────────────────────────────────────────────
   # Garante que o symlink de wallpaper (que aponta para path local do usuário)
   # nunca é versionado por acidente
   local gitignore="$SCRIPT_DIR/.gitignore"
@@ -1002,8 +1002,8 @@ cmd_auto() {
 
   confirm "Proceed with full setup?" || { info "Aborted."; exit 0; }
 
-  # Bootstrap (skip se já feito)
-  cmd_bootstrap
+  # Bootstrap (skip se já feito) — erros não-críticos não param o install
+  cmd_bootstrap || warn "Bootstrap terminou com avisos — continuando com install..."
 
   # Install com packages
   FLAG_INSTALL_PKGS=true
