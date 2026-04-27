@@ -5,3 +5,4 @@ __pycache__/
 # geral
 *.log
 *.cache
+.local/share/wallpaper/

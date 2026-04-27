@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  install.sh — Dotfile manager  ( Niri + Wayland + fish)
+#  install.sh — Dotfile manager  (Niri + Wayland + fish)
 #
 #  Commands:  bootstrap · install · update · rollback · status
 #
@@ -131,11 +131,8 @@ run() {
 
 # ── Interactive confirm (respects --yes and --dry-run) ───────────────────────
 confirm() {
-  if $FLAG_DRY_RUN; then
-    return 0
-  fi
-
-  $FLAG_YES && return 0
+  $FLAG_DRY_RUN && return 0
+  $FLAG_YES     && return 0
   ask "$1 [y/N] "; read -r -n1 reply; echo
   [[ "$reply" =~ ^[Yy]$ ]]
 }
@@ -219,10 +216,10 @@ deploy_entry() {
 #  REQUIRED BINARIES CHECK
 # =============================================================================
 REQUIRED_BINS=(
-    git wget alacritty btop
-    waybar fuzzel mako niri
-    grim wl-copy brightnessctl
-    xdg-user-dirs-update
+  git wget alacritty btop
+  waybar fuzzel mako niri
+  grim wl-copy brightnessctl
+  xdg-user-dirs-update
 )
 
 check_required_bins() {
@@ -243,7 +240,6 @@ check_required_bins() {
 cmd_bootstrap() {
   section "Bootstrap — Arch base → yay → packages"
 
-  # Guards
   ! command -v pacman &>/dev/null && { err "pacman not found. Arch only."; exit 1; }
   [[ "$EUID" -eq 0 ]]             && { err "Do not run as root. sudo is used internally."; exit 1; }
   sudo -v &>/dev/null             || { err "sudo not available or credentials failed."; exit 1; }
@@ -256,7 +252,7 @@ cmd_bootstrap() {
 
   # ── B1: base-devel + git via pacman ────────────────────────────────────────
   section "B1 · base-devel + git"
-  _detect_pkg_manager   # at this point: pacman only
+  _detect_pkg_manager
 
   local BASE_DEPS=(base-devel git curl wget)
   local missing_base=()
@@ -280,14 +276,11 @@ cmd_bootstrap() {
   else
     info "Cloning and building yay-bin from AUR…"
     local tmp_dir; tmp_dir="$(mktemp -d)"
-    # Ensure cleanup on exit or error
     trap 'rm -rf "$tmp_dir"' EXIT
-
     run git clone --depth=1 https://aur.archlinux.org/yay-bin.git "$tmp_dir/yay-bin"
     if ! $FLAG_DRY_RUN; then
       (cd "$tmp_dir/yay-bin" && makepkg -si --noconfirm)
     fi
-
     trap - EXIT
     run rm -rf "$tmp_dir"
     ok "yay installed."
@@ -302,21 +295,24 @@ cmd_bootstrap() {
     git curl wget xdg-utils xdg-user-dirs \
     fish alacritty btop fastfetch \
     waybar fuzzel mako niri \
-    grim slurp wl-clipboard brightnessctl playerctl \
-    mpv imv jq fd ripgrep \
+    grim slurp wl-clipboard brightnessctl \
+    mpv imv ripgrep \
+    thunar nwg-look swaylock cava xsettingsd \
     ttf-jetbrains-mono-nerd \
     ttf-nerd-fonts-symbols  \
-    noto-fonts               \
-    noto-fonts-emoji         \
-    ttf-liberation
+    noto-fonts \
+    noto-fonts-emoji \
+    ttf-liberation \
+    qogir-cursor-theme \
+    gruvbox-dark-gtk \
+    gruvbox-dark-icons-gtk
 
-  # Rebuild font cache
   if command -v fc-cache &>/dev/null; then
     run fc-cache -fv &>/dev/null
     ok "Font cache rebuilt."
   fi
 
-  # ── B4: fish as default shell ───────────────────────────────────────────────
+  # ── B4: fish como shell padrão ─────────────────────────────────────────────
   section "B4 · Default shell → fish"
 
   if command -v fish &>/dev/null; then
@@ -339,10 +335,9 @@ cmd_bootstrap() {
     warn "fish not found — skipping shell change."
   fi
 
-  # ── B5: Fisher + fish plugins ──────────────────────────────────────────────
+  # ── B5: Fisher + plugins ───────────────────────────────────────────────────
   section "B5 · Fisher (fish plugin manager)"
 
-  # Read plugin list from repo if present, otherwise use defaults
   local plugin_list="$SCRIPT_DIR/fish/plugins.txt"
   local -a FISHER_PLUGINS=(
     PatrickF1/fzf.fish
@@ -356,7 +351,7 @@ cmd_bootstrap() {
   fi
 
   if command -v fish &>/dev/null; then
-    # Install fisher
+    # Instala o fisher primeiro
     if ! fish -c "type -q fisher" &>/dev/null; then
       info "Installing fisher…"
       run fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
@@ -366,7 +361,7 @@ cmd_bootstrap() {
       skip "Fisher already installed."
     fi
 
-    # Install each plugin
+    # Instala cada plugin
     for plugin in "${FISHER_PLUGINS[@]}"; do
       [[ -z "$plugin" || "$plugin" == \#* ]] && continue
       if fish -c "fisher list 2>/dev/null | grep -qF '$plugin'"; then
@@ -387,12 +382,12 @@ cmd_bootstrap() {
 
   if command -v xdg-user-dirs-update &>/dev/null; then
     run xdg-user-dirs-update
-    ok "XDG user directories created (~/Downloads, ~/Documents, etc.)"
+    ok "XDG user directories created."
   else
     warn "xdg-user-dirs not found — skipping."
   fi
 
-  # ── B7: git configuration (skipped in --yes mode) ──────────────────────────
+  # ── B7: git configuration ──────────────────────────────────────────────────
   section "B7 · git configuration"
 
   local cur_name;  cur_name="$(git  config --global user.name  2>/dev/null || true)"
@@ -420,7 +415,6 @@ cmd_bootstrap() {
     skip "git identity already set: $cur_name <$cur_email>"
   fi
 
-  # ── Done ───────────────────────────────────────────────────────────────────
   state::set "bootstrap.done" "$(date '+%Y-%m-%d %H:%M:%S')"
   state::log "BOOTSTRAP complete"
 
@@ -531,7 +525,7 @@ run_deploy() {
 
   info "Distro       : ${OS_ID:-unknown}"
   info "Pkg manager  : $PKG_MANAGER"
-  info "Session      : ${XDG_SESSION_TYPE:-unknown}"
+  info "Session      : ${XDG_SESSION_TYPE:-tty}"
   info "Shell        : $(basename "$SHELL")"
   info "Profile      : $PROFILE"
   info "Symlink mode : $FLAG_SYMLINK"
@@ -539,7 +533,7 @@ run_deploy() {
 
   if [[ "$OS_ID" != "arch" && "$OS_ID" != "manjaro" && \
         "$OS_ID" != "endeavouros" && "$OS_ID" != "cachyos" ]]; then
-    warn "Distro '$OS_ID' not Arch-based — disabling package install."
+    warn "Distro '$OS_ID' não é Arch-based — package install desativado."
     FLAG_INSTALL_PKGS=false
   fi
 
@@ -565,14 +559,15 @@ run_deploy() {
   if $FLAG_INSTALL_PKGS; then
     [[ "$PKG_MANAGER" == "none" ]] && { err "No package manager. Run bootstrap first."; } || \
     pkg_install \
-          git wget xdg-user-dirs \
-          alacritty btop fastfetch \
-          waybar fuzzel mako niri \
-          grim slurp wl-clipboard brightnessctl \
-          mpv imv ripgrep curl \
-          ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols noto-fonts noto-fonts-emoji \
-          pipewire-pulse wireplumber fish fisher \
-          thunar nwg-look swaylock cava xsettingsd
+      git wget xdg-user-dirs \
+      alacritty btop fastfetch \
+      waybar fuzzel mako niri \
+      grim slurp wl-clipboard brightnessctl \
+      mpv imv ripgrep curl \
+      ttf-jetbrains-mono-nerd ttf-nerd-fonts-symbols noto-fonts noto-fonts-emoji \
+      pipewire-pulse wireplumber fish \
+      thunar nwg-look swaylock cava xsettingsd \
+      gruvbox-dark-gtk gruvbox-dark-icons-gtk qogir-cursor-theme
   else
     warn "Skipping packages (--install-packages not set)"
   fi
@@ -581,7 +576,11 @@ run_deploy() {
   section "4 · Configs"
   local base_cfg="$SCRIPT_DIR/.config"
   local profile_cfg="$SCRIPT_DIR/profiles/$PROFILE/.config"
-  local -a CONFIG_APPS=(alacritty fish waybar fuzzel mako niri btop fastfetch cava micro gtk-3.0 gtk-4.0 swaylock nwg-look Thunar xsettingsd mpv)
+  local -a CONFIG_APPS=(
+    alacritty fish waybar fuzzel mako niri
+    btop fastfetch cava micro
+    gtk-3.0 gtk-4.0 swaylock nwg-look Thunar xsettingsd mpv
+  )
 
   for app in "${CONFIG_APPS[@]}"; do
     local src="$base_cfg/$app"
@@ -589,31 +588,46 @@ run_deploy() {
     [[ -d "$src" ]] && deploy_entry "$src" "$HOME/.config/$app"
   done
 
+  # ── 4a · .gtkrc-2.0 (home root) ─────────────────────────────────────────────
+  section "4a · GTK-2 config"
+  local gtkrc2_src="$SCRIPT_DIR/.gtkrc-2.0"
+  if [[ -f "$gtkrc2_src" ]]; then
+    deploy_entry "$gtkrc2_src" "$HOME/.gtkrc-2.0"
+  else
+    skip ".gtkrc-2.0 not found in repo."
+  fi
+
   # ── 5 · Wallpapers ──────────────────────────────────────────────────────────
   section "5 · Wallpapers"
   local WALL_SRC="$SCRIPT_DIR/Wallpaper"
-  local WALL_DST="${XDG_PICTURES_DIR:-$HOME/Pictures}/Wallpaper"
+  local WALL_DST="$HOME/Pictures/Wallpaper"
 
   if [[ -d "$WALL_SRC" ]]; then
-      # Cria a pasta como usuário comum (sem sudo)
-      run mkdir -p "$WALL_DST"
+    run mkdir -p "$WALL_DST"
 
-      if command -v rsync &>/dev/null; then
-          # -r (recursivo), -l (links), -p (perms), -t (times)
-          # NOTA: Removemos o -o (owner) e -g (group) que vêm no -a
-          run rsync -rlpt "$WALL_SRC/" "$WALL_DST/"
-      else
-          # cp sem a flag -p (preserve) também resolve
-          run cp -rn "$WALL_SRC/." "$WALL_DST/"
-      fi
+    if command -v rsync &>/dev/null; then
+      run rsync -rlpt --exclude='current.png' "$WALL_SRC/" "$WALL_DST/"
+    else
+      # copia todos exceto o symlink current.png
+      find "$WALL_SRC" -maxdepth 1 -type f | while read -r wfile; do
+        run cp -n "$wfile" "$WALL_DST/"
+      done
+    fi
 
-      # Ajusta as permissões de leitura/escrita para o SEU usuário
-      # Sem sudo, pois você é o dono da pasta Pictures
-      run chmod -R u+rw,go+r "$WALL_DST"
+    run chmod -R u+rw,go+r "$WALL_DST"
 
-      ok "Wallpapers synced → $WALL_DST"
+    # Recria o symlink current.png apontando para o usuário atual (genérico)
+    local first_wall; first_wall="$(find "$WALL_DST" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort | head -n1)"
+    local current_link="$HOME/.local/share/wallpaper/current.png"
+    if [[ -n "$first_wall" ]]; then
+      run ln -sf "$first_wall" "$current_link"
+      ok "Wallpaper current → $(basename "$first_wall")"
+      state::set "wallpaper.current" "$first_wall"
+    fi
+
+    ok "Wallpapers synced → $WALL_DST"
   else
-      warn "No Wallpaper/ directory in repo — skipping."
+    warn "No Wallpaper/ directory in repo — skipping."
   fi
 
   # ── 6 · Scripts → ~/.local/bin ──────────────────────────────────────────────
@@ -640,33 +654,122 @@ run_deploy() {
     warn "No .local/bin/ directory — skipping."
   fi
 
-  # fish PATH guard
-  local fpath="$HOME/.config/fish/conf.d/local-bin.fish"
-  if command -v fish &>/dev/null && [[ ! -f "$fpath" ]]; then
-    run mkdir -p "$(dirname "$fpath")"
-    $FLAG_DRY_RUN || printf '%s\n' \
-      '# Added by dotfiles installer' \
-      'fish_add_path "$HOME/.local/bin"' > "$fpath"
-    ok "fish PATH conf written."
-  fi
-
-  # ── 7 · Desktop applications ────────────────────────────────────────────────
-  section "7 · Desktop applications"
-  local APP_SRC="$SCRIPT_DIR/.local/share/applications"
-  if [[ -d "$APP_SRC" ]]; then
-    local app_dst="$HOME/.local/share/applications"
-    run mkdir -p "$app_dst"
-    for app in "$APP_SRC"/*.desktop; do
-      [[ -f "$app" ]] || continue
-      local aname; aname="$(basename "$app")"
-      run cp "$app" "$app_dst/$aname"
-      ok "Desktop app: $aname"
+  # ── 6a · .desktop entries → ~/.local/share/applications ──────────────────
+  section "6a · Desktop entries"
+  local APPS_SRC="$SCRIPT_DIR/.local/share/applications"
+  if [[ -d "$APPS_SRC" ]]; then
+    local apps_dst="$HOME/.local/share/applications"
+    run mkdir -p "$apps_dst"
+    local count=0
+    for desktop_file in "$APPS_SRC"/*.desktop; do
+      [[ -f "$desktop_file" ]] || continue
+      local dname; dname="$(basename "$desktop_file")"
+      local ddst="$apps_dst/$dname"
+      if ! $FLAG_FORCE && [[ -f "$ddst" ]] && cmp -s "$desktop_file" "$ddst"; then
+        skip "$dname (unchanged)"; continue
+      fi
+      safe_backup "$ddst"
+      run cp "$desktop_file" "$ddst"; changed "$dname"
+      (( count++ )) || true
     done
+    [[ $count -gt 0 ]] && ok "Desktop entries deployed: $count" || skip "Desktop entries (all unchanged)"
+    state::log "DESKTOP entries deployed: $count"
   else
-    skip "No .local/share/applications/ directory."
+    skip "No .local/share/applications/ in repo."
   fi
 
-  # ── 8 · Systemd user services ──────────────────────────────────────────────
+  # ── 6b · Fish configs & plugins ─────────────────────────────────────────────
+  section "6b · Fish configs & plugins"
+  if command -v fish &>/dev/null; then
+    local fish_conf_dir="$HOME/.config/fish/conf.d"
+    run mkdir -p "$fish_conf_dir"
+
+    # local-bin.fish
+    local fpath_bin="$fish_conf_dir/local-bin.fish"
+    if [[ ! -f "$fpath_bin" ]] || $FLAG_FORCE; then
+      $FLAG_DRY_RUN || printf '%s\n' \
+        '# Added by dotfiles installer' \
+        'fish_add_path "$HOME/.local/bin"' > "$fpath_bin"
+      ok "fish PATH conf written ($fpath_bin)."
+    else
+      skip "fish PATH conf (unchanged)"
+    fi
+
+    # xdg.fish
+    local fpath_xdg="$fish_conf_dir/xdg.fish"
+    if [[ ! -f "$fpath_xdg" ]] || $FLAG_FORCE; then
+      $FLAG_DRY_RUN || printf '%s\n' \
+        '# Added by dotfiles installer' \
+        'set -q XDG_CONFIG_HOME; or set -gx XDG_CONFIG_HOME $HOME/.config' \
+        'set -q XDG_DATA_HOME;   or set -gx XDG_DATA_HOME   $HOME/.local/share' \
+        'set -q XDG_STATE_HOME;  or set -gx XDG_STATE_HOME  $HOME/.local/state' \
+        'set -q XDG_CACHE_HOME;  or set -gx XDG_CACHE_HOME  $HOME/.cache' > "$fpath_xdg"
+      ok "fish XDG conf written ($fpath_xdg)."
+    else
+      skip "fish XDG conf (unchanged)"
+    fi
+
+    # Fisher: instala se não estiver presente, depois atualiza
+    if ! fish -c "type -q fisher" &>/dev/null; then
+      info "Fisher não encontrado — instalando..."
+      if ! $FLAG_DRY_RUN; then
+        fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher" \
+          && ok "Fisher installed." \
+          || warn "Fisher install returned an error."
+      fi
+    else
+      skip "Fisher already installed."
+    fi
+
+    # fisher update — só executa se existir fish_plugins com conteúdo
+    local fish_plugins="$HOME/.config/fish/fish_plugins"
+    if [[ -f "$fish_plugins" ]] && [[ -s "$fish_plugins" ]]; then
+      info "Running fisher update..."
+      if ! $FLAG_DRY_RUN; then
+        if fish -c "fisher update" &>/dev/null; then
+          ok "Fisher plugins updated."
+          state::log "FISHER update executed"
+        else
+          warn "Fisher update returned an error."
+        fi
+      fi
+    else
+      skip "fish_plugins not found or empty — skipping fisher update (run bootstrap to install plugins)."
+    fi
+  else
+    skip "fish not installed — skipping configs."
+  fi
+
+  # ── 7a · Ícones locais ────────────────────────────────────────────────────
+  section "7a · Local icons"
+  local ICONS_SRC="$SCRIPT_DIR/.local/share/icons"
+  if [[ -d "$ICONS_SRC" ]]; then
+    local icons_dst="$HOME/.local/share/icons"
+    run mkdir -p "$icons_dst"
+    run cp -rn "$ICONS_SRC/." "$icons_dst/"
+    ok "Icons deployed → $icons_dst"
+  else
+    skip "No .local/share/icons/ in repo."
+  fi
+
+  # ── 7b · nwg-look gsettings ───────────────────────────────────────────────
+  section "7b · nwg-look gsettings"
+  local NWGLOOK_SRC="$SCRIPT_DIR/.local/share/nwg-look"
+  if [[ -d "$NWGLOOK_SRC" ]]; then
+    local nwglook_dst="$HOME/.local/share/nwg-look"
+    run mkdir -p "$nwglook_dst"
+    # usa rsync ou cp -r (sobrescreve, para evitar estado inconsistente)
+    if command -v rsync &>/dev/null; then
+      run rsync -rlpt "$NWGLOOK_SRC/" "$nwglook_dst/"
+    else
+      run cp -r "$NWGLOOK_SRC/." "$nwglook_dst/"
+    fi
+    ok "nwg-look gsettings deployed → $nwglook_dst"
+  else
+    skip "No .local/share/nwg-look/ in repo."
+  fi
+
+  # ── 8 · Systemd user services ─────────────────────────────────────────────
   section "8 · Systemd services"
   local SVC_SRC="$SCRIPT_DIR/systemd"
   if [[ -d "$SVC_SRC" ]]; then
@@ -696,7 +799,7 @@ run_deploy() {
     $FLAG_DRY_RUN || cat > "$mime_dst" <<'MIME'
 [Default Applications]
 x-terminal-emulator=alacritty.desktop
-inode/directory=alacritty.desktop
+inode/directory=thunar.desktop
 video/mp4=mpv.desktop
 video/x-matroska=mpv.desktop
 video/webm=mpv.desktop
@@ -711,28 +814,105 @@ MIME
     skip "mimeapps.list (unchanged)"
   fi
 
-  # ── 10 · Themes ───────────────────────────────────────────────────────────
+  # ── 10 · Themes (Gruvbox + Qogir cursor) ────────────────────────────────────
   section "10 · Themes"
+  # Temas são instalados via pacote (gruvbox-dark-gtk, gruvbox-dark-icons-gtk,
+  # qogir-cursor-theme). Aqui apenas aplicamos via gsettings e xsettingsd.
+  # Se a pasta themes/ existir no repo, copia para ~/.local/share/themes/ também.
   local THEME_SRC="$SCRIPT_DIR/themes"
   if [[ -d "$THEME_SRC/icons" ]]; then
     run cp -rn "$THEME_SRC/icons/." "$HOME/.local/share/icons/" 2>/dev/null || true
-    ok "Icon theme installed."
-  else skip "No icon theme."; fi
-
+    ok "Icon theme (repo) installed."
+  fi
   if [[ -d "$THEME_SRC/gtk" ]]; then
     run cp -rn "$THEME_SRC/gtk/." "$HOME/.local/share/themes/" 2>/dev/null || true
-    if command -v gsettings &>/dev/null; then
-      local gtk_name; gtk_name="$(ls "$THEME_SRC/gtk" | head -n1)"
-      run gsettings set org.gnome.desktop.interface gtk-theme  "$gtk_name" 2>/dev/null || true
-      run gsettings set org.gnome.desktop.wm.preferences theme "$gtk_name" 2>/dev/null || true
-      ok "gsettings: GTK = $gtk_name"
-    fi
-  else skip "No GTK theme."; fi
+  fi
 
-  # ── 11 · Validation ─────────────────────────────────────────────────────────
+  if command -v gsettings &>/dev/null; then
+    # GTK theme
+    local gtk_theme="Gruvbox-Dark"
+    # Detecta o nome exato instalado pelo pacote gruvbox-dark-gtk
+    if pacman -Qq gruvbox-dark-gtk &>/dev/null 2>&1; then
+      local detected; detected="$(find /usr/share/themes "$HOME/.local/share/themes" \
+        -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
+      [[ -n "$detected" ]] && gtk_theme="$detected"
+    fi
+
+    run gsettings set org.gnome.desktop.interface gtk-theme        "$gtk_theme" 2>/dev/null || true
+    run gsettings set org.gnome.desktop.wm.preferences theme       "$gtk_theme" 2>/dev/null || true
+    ok "GTK theme → $gtk_theme"
+
+    # Icon theme
+    local icon_theme="gruvbox-dark-icons-gtk"
+    if pacman -Qq gruvbox-dark-icons-gtk &>/dev/null 2>&1; then
+      local det_icon; det_icon="$(find /usr/share/icons "$HOME/.local/share/icons" \
+        -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
+      [[ -n "$det_icon" ]] && icon_theme="$det_icon"
+    fi
+    run gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
+    ok "Icon theme → $icon_theme"
+
+    # Cursor theme
+    local cursor_theme="Qogir"
+    if pacman -Qq qogir-cursor-theme &>/dev/null 2>&1; then
+      local det_cur; det_cur="$(find /usr/share/icons "$HOME/.local/share/icons" \
+        -maxdepth 1 -type d -iname 'Qogir*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
+      [[ -n "$det_cur" ]] && cursor_theme="$det_cur"
+    fi
+    run gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" 2>/dev/null || true
+    ok "Cursor theme → $cursor_theme"
+
+    state::log "THEMES applied: GTK=$gtk_theme ICONS=$icon_theme CURSOR=$cursor_theme"
+  else
+    warn "gsettings not available — themes not applied via dconf."
+    warn "Install gnome-settings-daemon or use nwg-look to apply themes manually."
+  fi
+
+  # ── 10a · Fontes locais ───────────────────────────────────────────────────
+  section "10a · Local fonts"
+  local FONTS_SRC="$SCRIPT_DIR/.local/share/fonts"
+  if [[ -d "$FONTS_SRC" ]]; then
+    local fonts_dst="$HOME/.local/share/fonts"
+    run mkdir -p "$fonts_dst"
+    run cp -rn "$FONTS_SRC/." "$fonts_dst/"
+    ok "Fonts deployed → $fonts_dst"
+
+    if command -v fc-cache &>/dev/null; then
+      run fc-cache -fv "$fonts_dst" &>/dev/null
+      ok "Font cache updated."
+    fi
+    state::log "FONTS deployed from repo"
+  else
+    skip "No .local/share/fonts/ in repo."
+  fi
+
+  # ── 11 · Weather widget ───────────────────────────────────────────────────
+  section "11 · Weather widget"
+  # O script está em assets/ (não em scripts/)
+  local weather_script="$HOME/.config/waybar/assets/weather.py"
+
+  if [[ -f "$weather_script" ]]; then
+    if ping -c 1 -W 2 8.8.8.8 &>/dev/null || curl -s --head --connect-timeout 2 http://google.com &>/dev/null; then
+      info "Caching weather location..."
+      if ! $FLAG_DRY_RUN; then
+        if python3 "$weather_script" &>/dev/null; then
+          ok "Weather location cached successfully."
+          state::log "WEATHER cached"
+        else
+          warn "weather.py executed but returned an error."
+        fi
+      fi
+    else
+      warn "No internet connection — skipping weather.py cache."
+    fi
+  else
+    skip "weather.py not found in waybar/assets/."
+  fi
+
+  # ── 12 · Validation ───────────────────────────────────────────────────────
   check_required_bins
 
-  # ── Persist state ───────────────────────────────────────────────────────────
+  # ── Persist state ─────────────────────────────────────────────────────────
   state::set "profile.current" "$PROFILE"
   state::set_lock
 }
@@ -748,7 +928,7 @@ cmd_install() {
     exit 0
   fi
 
-  state::clear "backup.index"   # fresh backup scope per install session
+  state::clear "backup.index"
   run_deploy
 
   section "Done"
