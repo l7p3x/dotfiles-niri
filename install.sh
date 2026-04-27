@@ -940,45 +940,82 @@ MIME
     run cp -rn "$THEME_SRC/gtk/." "$HOME/.local/share/themes/" 2>/dev/null || true
   fi
 
+  # Detecta nomes reais dos temas instalados (independente de pacman/gsettings)
+  local gtk_theme="Gruvbox-Dark"
+  local detected; detected="$(find /usr/share/themes "$HOME/.local/share/themes"     -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
+  [[ -n "$detected" ]] && gtk_theme="$detected"
+
+  local icon_theme="gruvbox-dark-icons-gtk"
+  local det_icon; det_icon="$(find /usr/share/icons "$HOME/.local/share/icons"     -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
+  [[ -n "$det_icon" ]] && icon_theme="$det_icon"
+
+  local cursor_theme="Qogir-white-cursors"
+  find /usr/share/icons "$HOME/.local/share/icons"     -maxdepth 1 -type d -name 'Qogir-white-cursors' 2>/dev/null | grep -q . || cursor_theme="Qogir"
+
+  # ── gsettings (dconf) ────────────────────────────────────────────────────────
+  # Tenta aplicar via dconf. Pode falhar fora de sessão gráfica — não é bloqueante.
   if command -v gsettings &>/dev/null; then
-    # GTK theme
-    local gtk_theme="Gruvbox-Dark"
-    # Detecta o nome exato instalado pelo pacote gruvbox-dark-gtk
-    if pacman -Qq gruvbox-dark-gtk &>/dev/null 2>&1; then
-      local detected; detected="$(find /usr/share/themes "$HOME/.local/share/themes" \
-        -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
-      [[ -n "$detected" ]] && gtk_theme="$detected"
+    if gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme" 2>/dev/null; then
+      gsettings set org.gnome.desktop.wm.preferences theme "$gtk_theme" 2>/dev/null || true
+      gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
+      gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" 2>/dev/null || true
+      gsettings set org.gnome.desktop.interface cursor-size 21 2>/dev/null || true
+      ok "gsettings: GTK=$gtk_theme | Icons=$icon_theme | Cursor=$cursor_theme (21px)"
+    else
+      warn "gsettings falhou (DBUS indisponível?) — aplicando via arquivos de config."
     fi
-
-    run gsettings set org.gnome.desktop.interface gtk-theme        "$gtk_theme" 2>/dev/null || true
-    run gsettings set org.gnome.desktop.wm.preferences theme       "$gtk_theme" 2>/dev/null || true
-    ok "GTK theme → $gtk_theme"
-
-    # Icon theme
-    local icon_theme="gruvbox-dark-icons-gtk"
-    if pacman -Qq gruvbox-dark-icons-gtk &>/dev/null 2>&1; then
-      local det_icon; det_icon="$(find /usr/share/icons "$HOME/.local/share/icons" \
-        -maxdepth 1 -type d -iname 'gruvbox*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
-      [[ -n "$det_icon" ]] && icon_theme="$det_icon"
-    fi
-    run gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
-    ok "Icon theme → $icon_theme"
-
-    # Cursor theme — Qogir-white-cursors como padrão, fallback para Qogir
-    local cursor_theme="Qogir-white-cursors"
-    if ! find /usr/share/icons "$HOME/.local/share/icons" \
-        -maxdepth 1 -type d -name 'Qogir-white-cursors' 2>/dev/null | grep -q .; then
-      cursor_theme="Qogir"
-    fi
-    run gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" 2>/dev/null || true
-    run gsettings set org.gnome.desktop.interface cursor-size 21 2>/dev/null || true
-    ok "Cursor theme → $cursor_theme (size: 21)"
-
-    state::log "THEMES applied: GTK=$gtk_theme ICONS=$icon_theme CURSOR=$cursor_theme"
-  else
-    warn "gsettings not available — themes not applied via dconf."
-    warn "Install gnome-settings-daemon or use nwg-look to apply themes manually."
   fi
+
+  # ── gtk-3.0/settings.ini ────────────────────────────────────────────────────
+  # Garante que GTK3 leia o tema correto mesmo sem dconf
+  local gtk3_settings="$HOME/.config/gtk-3.0/settings.ini"
+  if [[ -f "$gtk3_settings" ]]; then
+    run sed -i       -e "s|^gtk-theme-name=.*|gtk-theme-name=$gtk_theme|"       -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=$icon_theme|"       -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=$cursor_theme|"       -e "s|^gtk-cursor-theme-size=.*|gtk-cursor-theme-size=21|"       "$gtk3_settings"
+    ok "gtk-3.0/settings.ini atualizado."
+  fi
+
+  # ── gtk-4.0/settings.ini ────────────────────────────────────────────────────
+  local gtk4_settings="$HOME/.config/gtk-4.0/settings.ini"
+  if [[ -f "$gtk4_settings" ]]; then
+    run sed -i       -e "s|^gtk-theme-name=.*|gtk-theme-name=$gtk_theme|"       -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=$icon_theme|"       -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=$cursor_theme|"       -e "s|^gtk-cursor-theme-size=.*|gtk-cursor-theme-size=21|"       "$gtk4_settings"
+    ok "gtk-4.0/settings.ini atualizado."
+  fi
+
+  # ── xsettingsd.conf ──────────────────────────────────────────────────────────
+  # xsettingsd propaga temas para apps X11/XWayland no Niri.
+  # Atualizamos os valores no arquivo já deployado e recarregamos o daemon.
+  local xset_conf="$HOME/.config/xsettingsd/xsettingsd.conf"
+  if [[ -f "$xset_conf" ]]; then
+    run sed -i       -e "s|^Net/ThemeName .*|Net/ThemeName \"$gtk_theme\"|"       -e "s|^Net/IconThemeName .*|Net/IconThemeName \"$icon_theme\"|"       -e "s|^Gtk/CursorThemeName .*|Gtk/CursorThemeName \"$cursor_theme\"|"       -e "s|^Gtk/CursorThemeSize .*|Gtk/CursorThemeSize 21|"       "$xset_conf"
+    ok "xsettingsd.conf atualizado."
+    if pkill -HUP xsettingsd 2>/dev/null; then
+      ok "xsettingsd recarregado — cursor/icons aplicados ao vivo."
+    else
+      skip "xsettingsd não está rodando — será aplicado no próximo login."
+    fi
+  fi
+
+  # ── .gtkrc-2.0 ───────────────────────────────────────────────────────────────
+  local gtkrc2="$HOME/.gtkrc-2.0"
+  if [[ -f "$gtkrc2" ]]; then
+    run sed -i       -e "s|^gtk-theme-name=.*|gtk-theme-name=\"$gtk_theme\"|"       -e "s|^gtk-icon-theme-name=.*|gtk-icon-theme-name=\"$icon_theme\"|"       -e "s|^gtk-cursor-theme-name=.*|gtk-cursor-theme-name=\"$cursor_theme\"|"       -e "s|^gtk-cursor-theme-size=.*|gtk-cursor-theme-size=21|"       "$gtkrc2"
+    ok ".gtkrc-2.0 atualizado."
+  fi
+
+  # ── Xcursor default ──────────────────────────────────────────────────────────
+  # Cria ~/.local/share/icons/default/index.theme — lido pelo Xorg/XWayland
+  # para definir o cursor mesmo quando xsettingsd não está rodando ainda.
+  local xcursor_dst="$HOME/.local/share/icons/default"
+  run mkdir -p "$xcursor_dst"
+  $FLAG_DRY_RUN || cat > "$xcursor_dst/index.theme" <<XCURSOR
+[Icon Theme]
+Name=Default
+Comment=Default cursor
+Inherits=$cursor_theme
+XCURSOR
+  ok "Xcursor default → $cursor_theme"
+
+  state::log "THEMES applied: GTK=$gtk_theme ICONS=$icon_theme CURSOR=$cursor_theme size=21"  
 
   # ── 10a · Fontes locais ───────────────────────────────────────────────────
   section "10a · Local fonts"
@@ -1062,6 +1099,14 @@ cmd_install() {
   echo -e "  ${C_DIM}1. Log out and back in (shell + session changes)${C_RESET}"
   echo -e "  ${C_DIM}2. Start niri → check waybar, mako, fuzzel${C_RESET}"
   echo -e "  ${C_DIM}3. $(basename "$0") status — inspect state anytime${C_RESET}"
+  echo ""
+  echo -e "${C_YELLOW}${C_BOLD}  ⚠  Note${C_RESET}"
+  echo -e "  ${C_DIM}Cursor, icons and wallpaper may not apply 100% on the first login.${C_RESET}"
+  echo -e "  ${C_DIM}If that happens, run this after logging into the graphical session:${C_RESET}"
+  echo -e ""
+  echo -e "      ${C_CYAN}${C_BOLD}./install.sh update${C_RESET}"
+  echo -e ""
+  echo -e "  ${C_DIM}This re-applies themes and wallpaper with DBUS + awww running.${C_RESET}"
   echo ""
 }
 
