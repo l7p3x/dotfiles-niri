@@ -878,7 +878,7 @@ MIME
     ok "Icon theme → $icon_theme"
 
     # Cursor theme
-    local cursor_theme="Qogir"
+    local cursor_theme="Qogir-white-cursors"
     if pacman -Qq qogir-cursor-theme &>/dev/null 2>&1; then
       local det_cur; det_cur="$(find /usr/share/icons "$HOME/.local/share/icons" \
         -maxdepth 1 -type d -iname 'Qogir*' 2>/dev/null | head -n1 | xargs basename 2>/dev/null || true)"
