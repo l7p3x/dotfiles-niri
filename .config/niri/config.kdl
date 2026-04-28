@@ -253,7 +253,7 @@ environment {
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 spawn-sh-at-startup "SoundWireServer -platform xcb -nogui"
 spawn-sh-at-startup "gammastep -O 4500"
-spawn-sh-at-startup "awww img $HOME/.config/fuzzel/Wallpaper/current.png"
+spawn-sh-at-startup "awww img $HOME/.local/share/wallpaper/current.png"
 spawn-sh-at-startup "~/.config/niri/swayidle"
 
 hotkey-overlay {
