@@ -1,7 +1,6 @@
 #!/usr/bin/env fish
 
 set -l wallpaper_dir "$HOME/Pictures/Wallpaper"
-
 mkdir -p "$wallpaper_dir"
 
 if not test -d "$wallpaper_dir"
@@ -9,10 +8,25 @@ if not test -d "$wallpaper_dir"
     exit 1
 end
 
+# Detecta qualquer imagem pelo MIME type, sem filtrar por extensão
+set -l all_files (
+    find "$wallpaper_dir" -type f \
+    | while read -l f
+        if file --mime-type "$f" | grep -q "image/"
+            echo $f
+        end
+    end
+)
+
+if test (count $all_files) -eq 0
+    echo "No images found in $wallpaper_dir" >&2
+    exit 1
+end
+
 set -l selected (
-    find "$wallpaper_dir" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.webp" -o -iname "*.jpeg" \) \
-    | sed "s|$wallpaper_dir/||" \
-    | sed 's/\.[^.]*$//' \
+    for f in $all_files
+        string replace "$wallpaper_dir/" "" $f | string replace -r '\.[^.]+$' ''
+    end \
     | sort \
     | fuzzel --dmenu --prompt "Wallpaper: "
 )
@@ -21,7 +35,15 @@ if test -z "$selected"
     exit 0
 end
 
-set -l full_path (find "$wallpaper_dir" -type f -iname "$selected.*" | head -1)
+set -l full_path (
+    for f in $all_files
+        set -l stripped (string replace "$wallpaper_dir/" "" $f | string replace -r '\.[^.]+$' '')
+        if test "$stripped" = "$selected"
+            echo $f
+            break
+        end
+    end
+)
 
 if not test -f "$full_path"
     echo "Error: File not found: $selected" >&2
@@ -31,7 +53,6 @@ end
 mkdir -p "$HOME/.local/share/wallpaper"
 
 awww img "$full_path" 2>/dev/null
-
 if test $status -ne 0
     echo "Error: Failed to apply wallpaper with awww" >&2
     exit 1
