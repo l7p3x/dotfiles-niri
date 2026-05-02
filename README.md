@@ -1,4 +1,4 @@
-# dotfile-niri
+# dotfiles-niri
 
 A minimal, reproducible **Niri (Wayland) desktop setup** focused on performance, simplicity, and clean UX.
 
