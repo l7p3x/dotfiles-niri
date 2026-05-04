@@ -57,16 +57,14 @@
 
 #waybar.empty #window {
 	margin-left: 0px;
-	margin-left: 5px;
 }   
 
 /*--------------------*/
 /*-----WORKSPACES-----*/
 /*--------------------*/
 
-#workspaces {
-	margin-left: 5px;
-    margin-right: 5px;
+#workspaces button:first-child {
+    margin-left: 5px;
 }
 
 #workspaces button {
@@ -98,14 +96,21 @@
 }
 
 #workspaces button:only-child {
-margin-left: 0px;
-   margin-right: 0px;
-  opacity: 0;
+    opacity: 0;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
 }
 
 /*----------------*/
 /*------TRAY------*/
 /*----------------*/
+
+#tray {
+	margin-left: 5px;
+}
 
 #tray menu {
     background-color: @tray_menu;
