@@ -1,0 +1,21 @@
+#!/bin/bash
+
+FULLSCREEN_CHECK='python3 -c "
+import json, subprocess
+w = json.loads(subprocess.check_output([\"niri\",\"msg\",\"-j\",\"focused-window\"]))
+if not w:
+    exit(1)
+o = json.loads(subprocess.check_output([\"niri\",\"msg\",\"-j\",\"outputs\"]))
+tile = w.get(\"layout\",{}).get(\"tile_size\",[0,0])
+for out in o.values():
+    idx = out[\"current_mode\"]
+    m = out[\"modes\"][idx]
+    if [float(m[\"width\"]), float(m[\"height\"])] == tile:
+        exit(0)
+exit(1)
+"'
+
+/usr/bin/swayidle -w \
+    timeout 290 "playerctl status 2>/dev/null | grep -q Playing || $FULLSCREEN_CHECK || swaylock" \
+    timeout 300 "playerctl status 2>/dev/null | grep -q Playing || $FULLSCREEN_CHECK || niri msg action power-off-monitors" \
+    before-sleep 'swaylock'
