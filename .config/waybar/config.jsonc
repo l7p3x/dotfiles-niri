@@ -1,13 +1,13 @@
 {
   "spacing": 0,
-  "position": "top",
+  "position": "bottom",
   "reload_style_on_change": true,
   "modules-left": ["group/group-left"],
   "modules-center": ["group/group-center"],
   "modules-right": ["group/group-right"],
   "group/group-left": {
     "orientation": "horizontal",
-    "modules": ["custom/logo", "niri/workspaces", "niri/window", "tray"],
+    "modules": ["custom/logo", "niri/window", "niri/workspaces", "tray"],
   },
 
   "group/group-center": {
@@ -30,11 +30,9 @@
     "on-click": "fuzzel",
   },
 
-  "niri/workspaces": {},
-
   "niri/window": {
-    "format": "󰣆 {app_id}",
-    "tooltip-format": "App: {app_id}\nTitle: {title}",
+    "format": "󰣆 <span text_transform='capitalize'>{app_id}</span>",
+
     "rewrite": {
       ".*firefox.*": "<span rise='2000'>󰈹</span> Firefox",
       ".*zed.*": "<span rise='1000'></span> Zeditor",
@@ -43,12 +41,15 @@
       ".*btop.*": "<span rise='2000'></span> Btop",
       ".*abaddon.*": "<span rise='1000'>󰄛</span> Abaddon",
       ".*gimp.*": "<span rise='2000'></span> GIMP",
-      ".*steam.*": "<span rise='2000'>󰓓</span> Steam",
-      ".*hydra.*": "<span rise='1000'>󰺵</span> Hydra",
-      ".*sober.*": "<span rise='1000'>󰺵</span> Sober",
-      ".*nwg-look.*": "<span rise='2000'>󰔎</span> Nwg-look",
+      ".*steam.*": "<span rise='1000'>󰓓</span> Steam",
+      ".*(hydra|sober).*": "<span rise='1000'>󰺵</span> Sober",
+      ".*nwg-look.*": "<span rise='2000'></span> Nwg-look",
+      ".*ristretto.*": "<span rise='2000'>󰋩</span> Ristretto",
+      ".*spotube.*": "<span rise='500'></span> Spotube",
     },
   },
+
+  "niri/workspaces": {},
 
   "tray": {
     "icon-size": 18,
@@ -132,12 +133,14 @@
       "transition-left-to-right": false,
     },
     "modules": [
-      "custom/power", // First element is the "group leader" and won't ever be hidden
+      "custom/power",
       "custom/record",
       "custom/lock",
       "custom/reboot",
+      "custom/logout",
     ],
   },
+
   "custom/record": {
     "format": "{}",
     "tooltip": false,
@@ -146,16 +149,25 @@
     "signal": 1,
     "interval": "once",
   },
+
+  "custom/logout": {
+    "format": "",
+    "tooltip": false,
+    "on-click": "niri msg action quit",
+  },
+
   "custom/lock": {
     "format": "",
     "tooltip": false,
     "on-click": "~/.config/swaylock/config",
   },
+
   "custom/reboot": {
     "format": "",
     "tooltip": false,
     "on-click": "systemctl reboot",
   },
+
   "custom/power": {
     "format": "",
     "tooltip": false,
