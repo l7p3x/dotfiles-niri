@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""
-Waybar weather widget
-  · Zero external dependencies  (só stdlib)
-  · Localização detectada automaticamente por IP na 1ª execução (cacheada)
-  · Para forçar nova cidade: rm ~/.cache/waybar_weather_location
-  · Unidade: variável WAYBAR_WEATHER_UNIT=C (padrão) ou F
-"""
 
 import json
 import os
@@ -14,7 +7,7 @@ import urllib.request
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 LOCATION_CACHE = os.path.expanduser("~/.cache/waybar_weather_location")
-UNIT = os.environ.get("WAYBAR_WEATHER_UNIT", "C").upper()  # "C" ou "F"
+UNIT = os.environ.get("WAYBAR_WEATHER_UNIT", "C").upper()  # "C" or "F"
 TIMEOUT = 10
 
 
@@ -41,7 +34,7 @@ def get_location() -> str:
     except Exception:
         pass
 
-    return "auto"  # wttr.in resolve automaticamente por IP como fallback
+    return "auto"  # IP
 
 
 def fetch_weather(location: str) -> dict:
@@ -78,7 +71,7 @@ def main() -> None:
     humidity = cur["humidity"]
     wind_kmh = cur["windspeedKmph"]
 
-    # Previsão dos próximos 2 dias
+    # Preview 2 days
     forecast_lines = []
     days_pt = ["Amanhã", "Depois de amanhã"]
     for i, label in enumerate(days_pt):
