@@ -1,37 +1,26 @@
-@define-color modules_background                rgba(40, 40, 40, 0.9);
-
+@define-color modules_background                #282828;
 @define-color workspaces_button_off             #928374;
 @define-color workspaces_button_on              #fbf1c7;
-
 @define-color window                            #b8bb26;
-
 @define-color tray_menu                         #1d2021;
 @define-color tray_menu_border                  #3c3836;
 @define-color tray_menu_item                    #ebdbb2;
 @define-color tray_menu_item_hover              #ebdbb2;
 @define-color tray_menu_item_hover_background   #504945;
-
 @define-color clock_idle                        #ebdbb2;
 @define-color clock_hover                       #a89984;
-
 @define-color cava_idle                         #b8bb26;
 @define-color cava_hover                        #98971a;
-
 @define-color weather_idle                      #83a598;
 @define-color weather_hover                     #458588;
-
 @define-color temperature_idle                  #fe8019;
 @define-color temperature_hover                 #d65d0e;
-
 @define-color brightness_idle                   #fabd2f;
 @define-color brightness_hover                  #d79921;
-
 @define-color sound_idle                        #fabd2f;
 @define-color sound_hover                       #d79921;
-
 @define-color power_idle                        #fb4934;
 @define-color power_hover                       #cc241d;
-
 @define-color tooltip_background                #282828;
 @define-color tooltip_text                      #ebdbb2;
 
@@ -57,12 +46,27 @@
     margin-left: 10px;
 }
 
+/*----------------*/
+/*-----WINDOW-----*/
+/*----------------*/
+
+#window {
+    margin-left: 15px;
+    color: @window;
+}
+
+#waybar.empty #window {
+	margin-left: 0px;
+	margin-left: 5px;
+}   
+
 /*--------------------*/
 /*-----WORKSPACES-----*/
 /*--------------------*/
 
 #workspaces {
-    margin-left: 10px;
+	margin-left: 5px;
+    margin-right: 5px;
 }
 
 #workspaces button {
@@ -93,14 +97,10 @@
     transition: all 0.3s ease;
 }
 
-/*----------------*/
-/*-----WINDOW-----*/
-/*----------------*/
-
-#window {
-    margin-left: 10px;
-    margin-right: 10px;
-    color: @window;
+#workspaces button:only-child {
+margin-left: 0px;
+   margin-right: 0px;
+  opacity: 0;
 }
 
 /*----------------*/
@@ -240,31 +240,25 @@ c
 /*---------------*/
 
 #custom-power,
-#custom-record,
+#custom-logout,
 #custom-reboot,
-#custom-lock {
+#custom-lock,
+#custom-record {
     color: @power_idle;
 
     transition: all 0.3s ease;
 }
 
-#custom-power {
-    padding-right: 12px;
-}
-
-#custom-reboot {
-    padding-right: 12px;
-}
-
-#custom-lock {
-    padding-right: 12px;
-}
-
+#custom-power,
+#custom-logout,
+#custom-reboot,
+#custom-lock,
 #custom-record {
     padding-right: 12px;
 }
 
 #custom-power:hover,
+#custom-logout:hover,
 #custom-reboot:hover,
 #custom-lock:hover,
 #custom-record:hover {
