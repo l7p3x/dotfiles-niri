@@ -159,7 +159,7 @@
   "custom/lock": {
     "format": "",
     "tooltip": false,
-    "on-click": "~/.config/swaylock/config",
+    "on-click": "swaylock",
   },
 
   "custom/reboot": {
