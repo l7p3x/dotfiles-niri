@@ -235,6 +235,12 @@ layout {
     }
 }
 
+// blur {
+//    passes 2     // número de passos do blur (quanto maior, mais intenso)
+//    offset 3   // distância de amostragem
+//    noise 0.02   // adiciona grão para reduzir banding
+// }   
+
 // Add lines like this to spawn processes at startup.
 // Note that running niri as a session supports xdg-desktop-autostart,
 // which may be more convenient to use.
@@ -243,7 +249,6 @@ layout {
 // This line spawns waybar, a bar commonly used with Wayland compositors.
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "awww-daemon"
-spawn-at-startup "waybar"
 
 environment {
     DISPLAY ":0"
@@ -254,7 +259,7 @@ environment {
 spawn-sh-at-startup "SoundWireServer -platform xcb -nogui"
 spawn-sh-at-startup "gammastep -O 4500"
 spawn-sh-at-startup "awww img $HOME/.local/share/wallpaper/current.png"
-spawn-sh-at-startup "~/.config/niri/swayidle"
+spawn-sh-at-startup "swayidle"
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" popup at startup.
@@ -313,7 +318,7 @@ window-rule {
 window-rule {
     match app-id="alacritty-float"
     open-floating true
-}
+}  
 
 window-rule {
     match app-id="Thunar|thunar"
@@ -325,6 +330,15 @@ window-rule {
 window-rule {
     match is-floating=true
     opacity 0.9
+}
+
+window-rule {
+    match app-id="Tor Browser"
+    match title="Tor Browser"
+
+    focus-ring {
+        active-color "#800080"
+    }
 }
 
 // Example: hide two password managers from screen capture.
@@ -368,6 +382,8 @@ binds {
     Alt+G { spawn "gimp"; }
     Alt+E { spawn "thunar"; }
     Alt+F { spawn "firefox"; }
+    Super+T { spawn "torbrowser-launcher";  }
+	SUPER+G { spawn "github-desktop"; }
 
 
     // Program classes
@@ -378,7 +394,7 @@ binds {
     Alt+D { spawn "fuzzel"; }
 
     // Lock
-    Super+Alt+L { spawn "~/.config/swaylock/config"; }
+    Super+Alt+L { spawn "swaylock"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It is passed literally to `sh -c`.
@@ -637,7 +653,7 @@ binds {
     Alt+Shift+P { power-off-monitors; }
 
     // Notifications test
-    Alt+M { spawn "bash" "-c" "pkill mako; mako & sleep 0.3 && notify-send 'Mako Teste' 'Notificação funcionando!'"; }
+	Alt+M { spawn "bash" "-c" "pkill mako; mako & sleep 0.3 && notify-send 'Mako Test' 'Notification working!'"; }
 
     // Waybar
     Mod5+slash { spawn "bash" "-c" "if pgrep -x waybar > /dev/null; then pkill -x waybar; else waybar & fi"; }
