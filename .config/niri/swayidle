@@ -1,6 +1,0 @@
-#!/bin/bash
-
-swayidle -w \
-    timeout 290 'niri msg action power-off-monitors' \
-    timeout 300 '~/.config/swaylock/config -f' \
-    before-sleep '~/.config/swaylock/config -f'
