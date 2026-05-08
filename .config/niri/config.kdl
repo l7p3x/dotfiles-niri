@@ -10,7 +10,6 @@ input {
     keyboard {
         xkb {
             layout "us"
-            variant "intl"
         }
         numlock
     }
@@ -74,10 +73,8 @@ cursor {
 // More information on the wiki:
 // https://yalter.github.io/niri/Configuration:-Outputs
 // Remember to uncomment the node by removing "/-"!
-output "VGA-1" {
-    mode "1366x768@59.790"
+output "eDP-1" {
     scale 1
-    // position x=1280 y=0
 }
 
 // Settings that influence how windows are positioned and sized.
