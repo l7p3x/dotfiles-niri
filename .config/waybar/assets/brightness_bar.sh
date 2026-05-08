@@ -1,43 +1,42 @@
 #!/bin/bash
-BRIGHT_FILE="/tmp/brightness_current"
-PID_FILE="/tmp/brightness.pid"
-MIN_BRIGHT=0
-MAX_BRIGHT=100
-STEP=10
-DEFAULT_BRIGHT=50
 
-[ ! -f "$BRIGHT_FILE" ] && echo $DEFAULT_BRIGHT > "$BRIGHT_FILE"
+while true; do
+    output=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)
 
-CURRENT=$(cat "$BRIGHT_FILE")
+    # Extrai número com regex (mais confiável)
+    volume=$(echo "$output" | grep -oP '[0-9]+\.[0-9]+' | head -n1)
 
-case "$1" in
-    up)
-        NEW=$(( CURRENT + STEP ))
-        [ $NEW -gt $MAX_BRIGHT ] && NEW=$MAX_BRIGHT
-        echo $NEW > "$BRIGHT_FILE"
-        ;;
-    down)
-        NEW=$(( CURRENT - STEP ))
-        [ $NEW -lt $MIN_BRIGHT ] && NEW=$MIN_BRIGHT
-        echo $NEW > "$BRIGHT_FILE"
-        ;;
-esac
+    # fallback caso falhe
+    volume=${volume:-0}
 
-# Mata o ddcutil anterior se ainda estiver rodando
-if [ -f "$PID_FILE" ]; then
-    OLD_PID=$(cat "$PID_FILE")
-    kill "$OLD_PID" 2>/dev/null
-fi
+    # converte pra %
+    volume=$(printf "%.0f" "$(echo "$volume * 100" | bc -l)")
 
-# Aplica o valor mais recente do arquivo (sempre atualizado)
-( ddcutil setvcp 10 $(cat "$BRIGHT_FILE") >/dev/null 2>&1 ) &
-echo $! > "$PID_FILE"
+    # detecta mute
+    if [[ "$output" == *"[MUTED]"* ]]; then
+        muted="yes"
+    else
+        muted="no"
+    fi
 
-# Barra de progresso
-CURRENT=$(cat "$BRIGHT_FILE")
-FILLED=$(( CURRENT / 10 ))
-EMPTY=$(( 10 - FILLED ))
-BAR=""
-for ((i = 0; i < FILLED; i++)); do BAR+="▮"; done
-for ((i = 0; i < EMPTY; i++)); do BAR+="▯"; done
-echo "{\"text\": \"󰃟 $BAR\", \"tooltip\": \"Brightness: ${CURRENT}%\", \"class\": \"custom-brightness\"}"
+    FILLED=$((volume / 10))
+
+    if [ "$volume" -gt 0 ] && [ "$FILLED" -eq 0 ]; then
+        FILLED=1
+    fi
+
+    EMPTY=$((10 - FILLED))
+
+    if [ "$muted" = "yes" ]; then
+        BAR=" "
+    else
+        BAR=" "
+    fi
+
+    for ((i=0; i<FILLED; i++)); do BAR+="▮"; done
+    for ((i=0; i<EMPTY; i++)); do BAR+="▯"; done
+
+    echo "{\"text\": \"$BAR\", \"tooltip\": \"Volume: ${volume}%\", \"class\": \"custom-wireplumber\"}"
+
+    sleep 0.5
+done
