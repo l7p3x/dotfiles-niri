@@ -73,7 +73,8 @@ cursor {
 // More information on the wiki:
 // https://yalter.github.io/niri/Configuration:-Outputs
 // Remember to uncomment the node by removing "/-"!
-output "eDP-1" {
+/-output "VGA-1" {
+    mode "1366x768@59.790"
     scale 1
 }
 
