@@ -249,6 +249,8 @@ layout {
 // This line spawns waybar, a bar commonly used with Wayland compositors.
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "awww-daemon"
+spawn-at-startup "waybar"
+spawn-at-startup "mako"
 
 environment {
     DISPLAY ":0"
