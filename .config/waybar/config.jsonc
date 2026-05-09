@@ -1,6 +1,6 @@
 {
   "spacing": 0,
-  "position": "bottom",
+  "position": "top",
   "reload_style_on_change": true,
   "modules-left": ["group/group-left"],
   "modules-center": ["group/group-center"],
