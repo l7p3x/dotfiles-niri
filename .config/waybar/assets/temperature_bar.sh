@@ -1,41 +1,51 @@
 #!/bin/bash
 
-TEMP_FILE="/tmp/gammastep_current_temp"
-MIN_TEMP=0
-MAX_TEMP=4500
-STEP=450
-DEFAULT_TEMP=4500
+STATE_FILE="/tmp/curr_brightness"
+LOCK_FILE="/tmp/brightness.lock"
+STEP=10
+MIN=0
+MAX=100
 
-# Inicializa o arquivo se não existir
-[ ! -f "$TEMP_FILE" ] && echo $DEFAULT_TEMP > "$TEMP_FILE"
-
-# Lê a temperatura atual
-CURRENT=$(cat "$TEMP_FILE")
+[ ! -f "$STATE_FILE" ] && echo 50 > "$STATE_FILE"
+CURRENT=$(cat "$STATE_FILE")
 
 case "$1" in
     up)
         NEW=$(( CURRENT + STEP ))
-        [ $NEW -gt $MAX_TEMP ] && NEW=$MAX_TEMP
-        echo $NEW > "$TEMP_FILE"
-        pkill gammastep 2>/dev/null
-        nohup gammastep -O $NEW -P >/dev/null 2>&1 & disown
+        [ $NEW -gt $MAX ] && NEW=$MAX
         ;;
     down)
         NEW=$(( CURRENT - STEP ))
-        [ $NEW -lt $MIN_TEMP ] && NEW=$MIN_TEMP
-        echo $NEW > "$TEMP_FILE"
-        pkill gammastep 2>/dev/null
-        nohup gammastep -O $NEW -P >/dev/null 2>&1 & disown
+        [ $NEW -lt $MIN ] && NEW=$MIN
+        ;;
+    *)
+        NEW=$CURRENT
         ;;
 esac
 
-# Atualização visual (Barra de Progresso)
-CURRENT=$(cat "$TEMP_FILE")
-PERCENT=$(awk "BEGIN { printf \"%d\", ($CURRENT - $MIN_TEMP) / ($MAX_TEMP - $MIN_TEMP) * 100 }")
-FILLED=$(( PERCENT / 10 ))
+echo $NEW > "$STATE_FILE"
+
+FILLED=$(( NEW / 10 ))
 EMPTY=$(( 10 - FILLED ))
 BAR=""
-for ((i = 0; i < FILLED; i++)); do BAR+="▮"; done
-for ((i = 0; i < EMPTY; i++)); do BAR+="▯"; done
+for ((i=0; i<FILLED; i++)); do BAR+="▮"; done
+for ((i=0; i<EMPTY; i++)); do BAR+="▯"; done
+echo "{\"text\": \"󰃠 $BAR\", \"tooltip\": \"Brilho: ${NEW}%\"}"
 
-echo "{\"text\": \" $BAR\", \"tooltip\": \"Temperature: ${CURRENT}K (${PERCENT}%)\", \"class\": \"custom-temperature\"}"
+(
+  flock -n 9 || exit 0
+  
+  while true; do
+    TARGET=$(cat "$STATE_FILE")
+    
+    LAST_SENT=$(cat "/tmp/last_sent_brightness" 2>/dev/null || echo -1)
+    
+    if [ "$TARGET" -eq "$LAST_SENT" ]; then
+      break
+    fi
+    
+    ddcutil setvcp 10 "$TARGET" --bus 1 --sleep-multiplier .5 >/dev/null 2>&1
+    
+    echo "$TARGET" > "/tmp/last_sent_brightness"
+  done
+) 9>"$LOCK_FILE" &
