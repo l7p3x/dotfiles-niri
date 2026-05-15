@@ -115,14 +115,11 @@
   },
 
   "custom/brightness": {
-    "format": {},
-    "return-type": "json",
-    "tooltip": true,
-    "exec": "~/.config/waybar/assets/brightness_bar.sh",
-    "interval": 2,
-    "signal": 8,
-    "on-scroll-up": "~/.config/waybar/assets/brightness_bar.sh up",
-    "on-scroll-down": "~/.config/waybar/assets/brightness_bar.sh down",
+      "exec": "~/.config/waybar/assets/brightness_bar.sh",
+      "return-type": "json",
+      "signal": 10,
+      "on-scroll-up": "~/.config/waybar/assets/brightness_bar.sh up && pkill -RTMIN+10 waybar",
+      "on-scroll-down": "~/.config/waybar/assets/brightness_bar.sh down && pkill -RTMIN+10 waybar"
   },
 
   "group/group-power": {
