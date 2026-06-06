@@ -27,7 +27,7 @@ C_RED='\033[0;31m';   C_CYAN='\033[0;36m';   C_MAGENTA='\033[0;35m'
 # ── Logging ───────────────────────────────────────────────────────────────────
 info()    { echo -e "${C_BLUE}${C_BOLD}  =>${C_RESET} $*"; }
 ok()      { echo -e "${C_GREEN}${C_BOLD}  ✓${C_RESET}  $*"; }
-skip()    { echo -e "${C_DIM}  –  $*${C_RESET}"; }
+skip()    { echo -e "${C_DIM}  -  $*${C_RESET}"; }
 warn()    { echo -e "${C_YELLOW}${C_BOLD}  !${C_RESET}  $*"; }
 err()     { echo -e "${C_RED}${C_BOLD}  ✗${C_RESET}  $*" >&2; }
 section() { echo -e "\n${C_CYAN}${C_BOLD}━━━  $*  ━━━${C_RESET}"; }
