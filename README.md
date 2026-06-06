@@ -9,6 +9,9 @@
   <a href="https://github.com/l7p3x/dotfile-niri/stargazers"><img src="https://img.shields.io/github/stars/l7p3x/dotfile-niri.svg" alt="GitHub stars"></a>
 </p>
 
+> [!WARNING]
+> The `bootstrap` command and automatic package installation are **Arch-based only** (Arch, Manjaro, CachyOS, EndeavourOS). On other distros, use `./install.sh install` to deploy configs only and install dependencies manually.
+
 ---
 
 ## Overview
